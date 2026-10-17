@@ -30,9 +30,6 @@ object UiEnginePrefs {
     private const val KEY_ENGINE = "ui_engine"
     private const val KEY_USE_BLUR = "use_blur"
     private const val KEY_COLOR_MODE = "color_mode"
-    private const val KEY_KEY_COLOR = "key_color"
-    private const val KEY_PALETTE_STYLE = "palette_style"
-    private const val KEY_COLOR_SPEC = "color_spec"
     private const val KEY_DEBUG_MODE = "debug_mode"
 
     private fun prefs(context: Context) =
@@ -64,29 +61,8 @@ object UiEnginePrefs {
         prefs(context).edit().putString(KEY_COLOR_MODE, mode.name).apply()
     }
 
-    /** Seed colour as ARGB; `0` follows the wallpaper. */
-    fun loadKeyColor(context: Context): Int =
-        prefs(context).getInt(KEY_KEY_COLOR, 0)
 
-    fun saveKeyColor(context: Context, color: Int) {
-        prefs(context).edit().putInt(KEY_KEY_COLOR, color).apply()
-    }
 
-    /** Palette style name, shared by both engines. */
-    fun loadPaletteStyle(context: Context): String =
-        prefs(context).getString(KEY_PALETTE_STYLE, null) ?: "TonalSpot"
-
-    fun savePaletteStyle(context: Context, style: String) {
-        prefs(context).edit().putString(KEY_PALETTE_STYLE, style).apply()
-    }
-
-    /** Colour spec name, shared by both engines. */
-    fun loadColorSpec(context: Context): String =
-        prefs(context).getString(KEY_COLOR_SPEC, null) ?: "SPEC_2021"
-
-    fun saveColorSpec(context: Context, spec: String) {
-        prefs(context).edit().putString(KEY_COLOR_SPEC, spec).apply()
-    }
 
     /** Whether the diagnostic rows are on show. */
     fun loadDebugMode(context: Context): Boolean =

@@ -49,7 +49,6 @@ import top.youzix.neko.ui.miuix.licenses.LicensesScreen
 import top.youzix.neko.ui.miuix.list.ListScreen
 import top.youzix.neko.ui.miuix.liquid.FloatingBottomBar
 import top.youzix.neko.ui.miuix.settings.SettingsScreen
-import top.youzix.neko.ui.miuix.theme.ThemeScreen
 import top.youzix.neko.ui.nav.Route
 import top.youzix.neko.ui.rememberMainPagerState
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
@@ -78,12 +77,7 @@ const val TAB_SETTINGS = 3
 @Composable
 fun MiuixApp() {
     val context = LocalContext.current
-    MiuixAppTheme(
-        colorMode = AppState.colorMode,
-        keyColor = AppState.keyColor,
-        paletteStyle = AppState.paletteStyle,
-        colorSpec = AppState.colorSpec,
-    ) {
+    MiuixAppTheme(colorMode = AppState.colorMode) {
         MiuixShell(
             engine = AppState.engine,
             onEngineChange = {
@@ -158,16 +152,10 @@ fun MiuixShell(
                     engine = engine,
                     onEngineChange = onEngineChange,
                     onNotify = notify,
-                    onOpenTheme = { navigator.push(Route.Theme) },
                     onOpenAbout = { navigator.push(Route.About) },
                     onOpenLicenses = { navigator.push(Route.Licenses) },
                     onTabSelected = { index -> mainPagerState.animateToPage(index) },
                 )
-            }
-
-            entry<Route.Theme> {
-                LaunchedEffect(Unit) { CrashHandler.note("二级页面 主题") }
-                ThemeScreen(onBack = { navigator.pop() })
             }
 
             entry<Route.About> {
@@ -212,7 +200,6 @@ private fun MiuixTabs(
     engine: UiEngine,
     onEngineChange: (UiEngine) -> Unit,
     onNotify: (String) -> Unit,
-    onOpenTheme: () -> Unit,
     onOpenAbout: () -> Unit,
     onOpenLicenses: () -> Unit,
     onTabSelected: (Int) -> Unit,
@@ -299,7 +286,6 @@ private fun MiuixTabs(
                         scrollBehavior = scrollBehavior,
                         engine = engine,
                         onEngineChange = onEngineChange,
-                        onOpenTheme = { onOpenTheme() },
                         onOpenAbout = onOpenAbout,
                         onOpenLicenses = onOpenLicenses,
                     )

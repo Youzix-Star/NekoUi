@@ -30,15 +30,6 @@ object AppState {
     /** Light/dark/monet choice, shared by both engines. */
     var colorMode by mutableStateOf(ColorMode.System)
 
-    /** Seed colour as ARGB; `0` means "follow the wallpaper" where the platform supports it. */
-    var keyColor by mutableStateOf(0)
-
-    /** Palette style name (`PaletteStyle`), shared by both engines. */
-    var paletteStyle by mutableStateOf("TonalSpot")
-
-    /** Colour spec name (`ColorSpec.SpecVersion`), shared by both engines. */
-    var colorSpec by mutableStateOf("SPEC_2021")
-
     /**
      * Whether the diagnostic rows are on show.
      *

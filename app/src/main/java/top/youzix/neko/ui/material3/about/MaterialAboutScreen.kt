@@ -11,7 +11,9 @@ package top.youzix.neko.ui.material3.about
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,7 +27,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -57,9 +58,12 @@ import top.youzix.neko.ui.AppIcons
 import top.youzix.neko.ui.AppMark
 import top.youzix.neko.ui.UiEnginePrefs
 import top.youzix.neko.util.DeviceInfo
+import top.youzix.neko.util.UpdateChecker
+import top.youzix.neko.util.UpdateResult
 import top.youzix.neko.ui.material3.material3AppBarColor
 import top.youzix.neko.ui.material3.material3BlurEffect
 import top.youzix.neko.ui.material3.rememberMaterial3BlurBackdrop
+import top.youzix.neko.ui.material3.components.AppDialog
 import top.youzix.neko.ui.material3.components.IconTile
 import top.youzix.neko.ui.material3.components.SegmentedColumn
 import top.youzix.neko.ui.material3.components.SegmentedListItem
@@ -86,6 +90,8 @@ fun MaterialAboutScreen(
     var crashLog by remember { mutableStateOf(CrashHandler.read(context)) }
     var showCrash by remember { mutableStateOf(false) }
     var deviceInfo by remember { mutableStateOf<String?>(null) }
+    var checking by remember { mutableStateOf(false) }
+    var update by remember { mutableStateOf<UpdateResult.Available?>(null) }
 
     Scaffold(
         modifier = Modifier
@@ -170,6 +176,29 @@ fun MaterialAboutScreen(
                             trailingContent = { Icon(AppIcons.ChevronRight, null) },
                         )
                     }
+                    item {
+                        SegmentedListItem(
+                            onClick = {
+                                if (!checking) {
+                                    checking = true
+                                    UpdateChecker.check { result ->
+                                        checking = false
+                                        when (result) {
+                                            is UpdateResult.Available -> update = result
+                                            UpdateResult.UpToDate -> onNotify("已是最新版本")
+                                            is UpdateResult.Failed -> onNotify("检查失败：" + result.message)
+                                        }
+                                    }
+                                }
+                            },
+                            headlineContent = { Text("检查更新") },
+                            supportingContent = {
+                                Text(if (checking) "检查中…" else "当前 v${BuildConfig.VERSION_NAME}")
+                            },
+                            leadingContent = { IconTile(AppIcons.Refresh, "检查更新") },
+                            trailingContent = { Icon(AppIcons.ChevronRight, null) },
+                        )
+                    }
                 }
             }
 
@@ -208,28 +237,24 @@ fun MaterialAboutScreen(
 
     val report = crashLog
     if (showCrash) {
-        AlertDialog(
-            onDismissRequest = { showCrash = false },
-            title = { Text("崩溃日志") },
-            text = {
-                if (report.isNullOrBlank()) {
-                    Text("没有崩溃记录。")
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 360.dp)
-                            .verticalScroll(rememberScrollState()),
-                    ) {
-                        Text(
-                            text = report,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontFamily = FontFamily.Monospace,
-                        )
-                    }
+        AppDialog(title = "崩溃日志", onDismissRequest = { showCrash = false }) {
+            if (report.isNullOrBlank()) {
+                Text("没有崩溃记录。")
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 360.dp)
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    Text(
+                        text = report,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontFamily = FontFamily.Monospace,
+                    )
                 }
-            },
-            confirmButton = {
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (!report.isNullOrBlank()) {
                     TextButton(
                         onClick = {
@@ -237,12 +262,6 @@ fun MaterialAboutScreen(
                             onNotify("已复制崩溃日志")
                         },
                     ) { Text("复制") }
-                }
-            },
-            dismissButton = {
-                if (report.isNullOrBlank()) {
-                    TextButton(onClick = { showCrash = false }) { Text("关闭") }
-                } else {
                     TextButton(
                         onClick = {
                             CrashHandler.clear(context)
@@ -252,30 +271,27 @@ fun MaterialAboutScreen(
                         },
                     ) { Text("清空") }
                 }
-            },
-        )
+                TextButton(onClick = { showCrash = false }) { Text("关闭") }
+            }
+        }
     }
 
     val info = deviceInfo
     if (info != null) {
-        AlertDialog(
-            onDismissRequest = { deviceInfo = null },
-            title = { Text("设备信息") },
-            text = {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 360.dp)
-                        .verticalScroll(rememberScrollState()),
-                ) {
-                    Text(
-                        text = info,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontFamily = FontFamily.Monospace,
-                    )
-                }
-            },
-            confirmButton = {
+        AppDialog(title = "设备信息", onDismissRequest = { deviceInfo = null }) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 360.dp)
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                Text(
+                    text = info,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontFamily = FontFamily.Monospace,
+                )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TextButton(
                     onClick = {
                         clipboard.setText(AnnotatedString(info))
@@ -283,11 +299,40 @@ fun MaterialAboutScreen(
                         deviceInfo = null
                     },
                 ) { Text("复制") }
-            },
-            dismissButton = {
                 TextButton(onClick = { deviceInfo = null }) { Text("关闭") }
-            },
-        )
+            }
+        }
+    }
+
+    update?.let { available ->
+        AppDialog(title = "发现新版本 v${available.version}", onDismissRequest = { update = null }) {
+            if (available.notes.isBlank()) {
+                Text("这个版本没有写更新说明。")
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 320.dp)
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    Text(text = available.notes, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(
+                    onClick = {
+                        val target = available.apkUrl
+                        if (target != null) {
+                            uriHandler.openUri(target)
+                        } else {
+                            UpdateChecker.openReleasePage(context)
+                        }
+                        update = null
+                    },
+                ) { Text(if (available.apkUrl != null) "下载" else "打开发布页") }
+                TextButton(onClick = { update = null }) { Text("关闭") }
+            }
+        }
     }
 }
 

@@ -70,12 +70,7 @@ class CrashReportActivity : ComponentActivity() {
 
         val composed = runCatching {
             setContent {
-                MiuixAppTheme(
-                    colorMode = ColorMode.System,
-                    keyColor = 0,
-                    paletteStyle = "TonalSpot",
-                    colorSpec = "SPEC_2021",
-                ) {
+                MiuixAppTheme(colorMode = ColorMode.System) {
                     CrashReportScreen(
                         report = report,
                         path = path,

@@ -54,7 +54,6 @@ import top.youzix.neko.ui.material3.home.MaterialHomeScreen
 import top.youzix.neko.ui.material3.licenses.MaterialLicensesScreen
 import top.youzix.neko.ui.material3.list.MaterialListScreen
 import top.youzix.neko.ui.material3.settings.MaterialSettingsScreen
-import top.youzix.neko.ui.material3.theme.MaterialThemeScreen
 import top.youzix.neko.ui.material3.widgets.SwipeableSnackbarHost
 import top.youzix.neko.ui.nav.Route
 import top.youzix.neko.ui.rememberMainPagerState
@@ -72,12 +71,7 @@ private const val TAB_SETTINGS = 3
 @Composable
 fun MaterialApp() {
     val context = LocalContext.current
-    MaterialAppTheme(
-        colorMode = AppState.colorMode,
-        keyColor = AppState.keyColor,
-        paletteStyle = AppState.paletteStyle,
-        colorSpec = AppState.colorSpec,
-    ) {
+    MaterialAppTheme(colorMode = AppState.colorMode) {
         MaterialShell(
             engine = AppState.engine,
             onEngineChange = {
@@ -174,21 +168,12 @@ private fun MaterialShell(
                                 useBlur = AppState.useBlur,
                                 engine = engine,
                                 onEngineChange = onEngineChange,
-                                onOpenTheme = { navigator.push(Route.Theme) },
                                 onOpenAbout = { navigator.push(Route.About) },
                                 onOpenLicenses = { navigator.push(Route.Licenses) },
                             )
                         }
                     }
                 }
-            }
-
-            entry<Route.Theme> {
-                LaunchedEffect(Unit) { CrashHandler.note("二级页面 主题") }
-                MaterialThemeScreen(
-                    onBack = { navigator.pop() },
-                    useBlur = AppState.useBlur,
-                )
             }
 
             entry<Route.About> {

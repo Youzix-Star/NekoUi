@@ -25,7 +25,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -57,6 +56,7 @@ import top.youzix.neko.demo.AppEntry
 import top.youzix.neko.demo.ListDemo
 import top.youzix.neko.demo.ListFilter
 import top.youzix.neko.demo.TagTone
+import top.youzix.neko.ui.material3.components.AppDialog
 import top.youzix.neko.ui.material3.components.ExpressiveScaffold
 import top.youzix.neko.ui.material3.components.SearchAppBar
 import top.youzix.neko.ui.material3.components.SegmentedColumn
@@ -165,12 +165,15 @@ fun MaterialListScreen(
     }
 
     selected?.let { app ->
-        AlertDialog(
-            onDismissRequest = { selected = null },
-            title = { Text(app.name) },
-            text = { Text("${app.packageName}\n${app.note}") },
-            confirmButton = { TextButton(onClick = { selected = null }) { Text("关闭") } },
-        )
+        AppDialog(title = app.name, onDismissRequest = { selected = null }) {
+            Text(text = app.packageName, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = app.note,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            TextButton(onClick = { selected = null }) { Text("关闭") }
+        }
     }
 }
 

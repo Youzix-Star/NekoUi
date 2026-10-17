@@ -26,12 +26,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
+import top.youzix.neko.AppState
 import top.youzix.neko.ui.AppIcons
 import top.youzix.neko.ui.UiEngine
+import top.youzix.neko.ui.UiEnginePrefs
+import top.youzix.neko.ui.theme.ColorMode
 import top.youzix.neko.ui.material3.components.IconTile
 import top.youzix.neko.ui.material3.components.SegmentedColumn
 import top.youzix.neko.ui.material3.components.SegmentedDropdownItem
 import top.youzix.neko.ui.material3.components.SegmentedListItem
+import top.youzix.neko.ui.material3.components.SegmentedSwitchItem
 import top.youzix.neko.ui.material3.material3AppBarColor
 import top.youzix.neko.ui.material3.material3BlurEffect
 import top.youzix.neko.ui.material3.rememberMaterial3BlurBackdrop
@@ -43,10 +48,10 @@ fun MaterialSettingsScreen(
     useBlur: Boolean,
     engine: UiEngine,
     onEngineChange: (UiEngine) -> Unit,
-    onOpenTheme: () -> Unit,
     onOpenAbout: () -> Unit,
     onOpenLicenses: () -> Unit,
 ) {
+    val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val backdrop = rememberMaterial3BlurBackdrop(useBlur)
 
@@ -80,12 +85,30 @@ fun MaterialSettingsScreen(
                     title = "外观",
                 ) {
                     item {
-                        SegmentedListItem(
-                            onClick = onOpenTheme,
-                            headlineContent = { Text("主题") },
-                            supportingContent = { Text("配色、种子色、模糊") },
-                            leadingContent = { IconTile(AppIcons.Palette, "主题") },
-                            trailingContent = { Icon(AppIcons.ChevronRight, null) },
+                        SegmentedDropdownItem(
+                            icon = AppIcons.Palette,
+                            title = "主题模式",
+                            summary = "浅色、深色，或从壁纸取色",
+                            items = ColorMode.entries.map { it.label },
+                            selectedIndex = ColorMode.entries.indexOf(AppState.colorMode).coerceAtLeast(0),
+                            onItemSelected = { index ->
+                                ColorMode.entries.getOrNull(index)?.let {
+                                    AppState.colorMode = it
+                                    UiEnginePrefs.saveColorMode(context, it)
+                                }
+                            },
+                        )
+                    }
+                    item {
+                        SegmentedSwitchItem(
+                            icon = AppIcons.BlurOn,
+                            title = "模糊与液态玻璃",
+                            summary = "底栏与顶栏的半透明模糊",
+                            checked = AppState.useBlur,
+                            onCheckedChange = {
+                                AppState.useBlur = it
+                                UiEnginePrefs.saveUseBlur(context, it)
+                            },
                         )
                     }
                 }

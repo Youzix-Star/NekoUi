@@ -75,11 +75,11 @@ fun ListScreen(
         modifier = Modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
-        contentPadding = contentPadding,
         topAppBarScrollBehavior = scrollBehavior,
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
+            contentPadding = contentPadding,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item(key = "search") {

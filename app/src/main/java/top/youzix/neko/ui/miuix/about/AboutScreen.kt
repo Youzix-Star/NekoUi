@@ -42,6 +42,8 @@ import top.youzix.neko.ui.AppIcons
 import top.youzix.neko.ui.AppMark
 import top.youzix.neko.ui.UiEnginePrefs
 import top.youzix.neko.util.DeviceInfo
+import top.youzix.neko.util.UpdateChecker
+import top.youzix.neko.util.UpdateResult
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import top.yukonga.miuix.kmp.basic.Button
@@ -90,9 +92,9 @@ fun AboutScreen(
     ) { innerPadding ->
         val layoutDirection = LocalLayoutDirection.current
         val contentPadding = PaddingValues(
-            start = innerPadding.calculateStartPadding(layoutDirection),
-            top = innerPadding.calculateTopPadding(),
-            end = innerPadding.calculateEndPadding(layoutDirection),
+            start = innerPadding.calculateStartPadding(layoutDirection) + 12.dp,
+            top = innerPadding.calculateTopPadding() + 12.dp,
+            end = innerPadding.calculateEndPadding(layoutDirection) + 12.dp,
             bottom = innerPadding.calculateBottomPadding() + 24.dp,
         )
         AboutContent(contentPadding, scrollBehavior, onOpenLicenses, onNotify)
@@ -111,6 +113,8 @@ private fun AboutContent(
     val context = LocalContext.current
     var crashLog by remember { mutableStateOf(CrashHandler.read(context)) }
     var showCrash by remember { mutableStateOf(false) }
+    var checking by remember { mutableStateOf(false) }
+    var update by remember { mutableStateOf<UpdateResult.Available?>(null) }
     var deviceInfo by remember { mutableStateOf<String?>(null) }
 
     LazyColumn(
@@ -163,6 +167,25 @@ private fun AboutContent(
                             Icon(AppIcons.Phones, null, Modifier.size(22.dp))
                         },
                         onClick = { deviceInfo = DeviceInfo.snapshot(context) },
+                    )
+                    ArrowPreference(
+                        title = "检查更新",
+                        summary = if (checking) "检查中…" else "当前 v${BuildConfig.VERSION_NAME}",
+                        startAction = {
+                            Icon(AppIcons.Refresh, null, Modifier.size(22.dp))
+                        },
+                        onClick = {
+                            if (checking) return@ArrowPreference
+                            checking = true
+                            UpdateChecker.check { result ->
+                                checking = false
+                                when (result) {
+                                    is UpdateResult.Available -> update = result
+                                    UpdateResult.UpToDate -> onNotify("已是最新版本")
+                                    is UpdateResult.Failed -> onNotify("检查失败：" + result.message)
+                                }
+                            }
+                        },
                     )
                 }
             }
@@ -332,5 +355,41 @@ private fun AppHeader(onNotify: (String) -> Unit) {
                 }
             },
         )
+    }
+
+    update?.let { available ->
+        OverlayDialog(
+            show = true,
+            title = "发现新版本 v${available.version}",
+            onDismissRequest = { update = null },
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (available.notes.isBlank()) {
+                    Text("这个版本没有写更新说明。", style = MiuixTheme.textStyles.body2)
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 320.dp)
+                            .verticalScroll(rememberScrollState()),
+                    ) {
+                        Text(available.notes, style = MiuixTheme.textStyles.footnote1)
+                    }
+                }
+                Button(
+                    onClick = {
+                        val target = available.apkUrl
+                        if (target != null) uriHandler.openUri(target) else UpdateChecker.openReleasePage(context)
+                        update = null
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(if (available.apkUrl != null) "下载" else "打开发布页")
+                }
+                Button(onClick = { update = null }, modifier = Modifier.fillMaxWidth()) {
+                    Text("关闭")
+                }
+            }
+        }
     }
 }

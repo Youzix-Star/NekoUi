@@ -33,7 +33,6 @@ import androidx.compose.ui.unit.dp
 import top.youzix.neko.ui.material3.material3AppBarColor
 import top.youzix.neko.ui.material3.material3BlurEffect
 import top.youzix.neko.ui.material3.rememberMaterial3BlurBackdrop
-import top.youzix.neko.ui.AppIcons
 import top.youzix.neko.ui.material3.components.SegmentedColumn
 import top.youzix.neko.ui.material3.components.SegmentedListItem
 import top.yukonga.miuix.kmp.blur.layerBackdrop
@@ -125,14 +124,16 @@ fun MaterialLicensesScreen(onBack: () -> Unit, useBlur: Boolean) {
         contentPadding = paddingValues + PaddingValues(bottom = 24.dp),
     ) {
         item {
-            SegmentedColumn(title = "本项目基于 AGPL-3.0 开源") {
+            SegmentedColumn(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                title = "本项目基于 AGPL-3.0 开源",
+            ) {
                 entries.forEach { entry ->
                     item(key = entry.name) {
                         SegmentedListItem(
                             onClick = { uriHandler.openUri(entry.url) },
                             headlineContent = { Text(entry.name) },
                             supportingContent = { Text(entry.license) },
-                            trailingContent = { Icon(AppIcons.ChevronRight, null) },
                         )
                     }
                 }

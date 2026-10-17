@@ -20,14 +20,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
+import top.youzix.neko.AppState
 import top.youzix.neko.ui.AppIcons
 import top.youzix.neko.ui.UiEngine
+import top.youzix.neko.ui.UiEnginePrefs
+import top.youzix.neko.ui.theme.ColorMode
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
+import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 
@@ -37,11 +42,12 @@ fun SettingsScreen(
     scrollBehavior: ScrollBehavior,
     engine: UiEngine,
     onEngineChange: (UiEngine) -> Unit,
-    onOpenTheme: () -> Unit,
     onOpenAbout: () -> Unit,
     onOpenLicenses: () -> Unit,
 ) {
+    val context = LocalContext.current
     val engineLabels = remember { UiEngine.entries.map { it.label } }
+    val modeLabels = remember { ColorMode.entries.map { it.label } }
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -54,11 +60,28 @@ fun SettingsScreen(
             Column {
                 SmallTitle(text = "外观")
                 Card(modifier = Modifier.fillMaxWidth()) {
-                    ArrowPreference(
-                        title = "主题",
-                        summary = "配色、种子色、模糊",
+                    OverlayDropdownPreference(
+                        title = "主题模式",
+                        summary = "浅色、深色，或从壁纸取色",
+                        items = modeLabels,
+                        selectedIndex = ColorMode.entries.indexOf(AppState.colorMode).coerceAtLeast(0),
                         startAction = { Icon(AppIcons.Palette, null, Modifier.size(22.dp), colorScheme.onBackground) },
-                        onClick = onOpenTheme,
+                        onSelectedIndexChange = { index ->
+                            ColorMode.entries.getOrNull(index)?.let {
+                                AppState.colorMode = it
+                                UiEnginePrefs.saveColorMode(context, it)
+                            }
+                        },
+                    )
+                    SwitchPreference(
+                        title = "模糊与液态玻璃",
+                        summary = "底栏与顶栏的半透明模糊",
+                        startAction = { Icon(AppIcons.BlurOn, null, Modifier.size(22.dp), colorScheme.onBackground) },
+                        checked = AppState.useBlur,
+                        onCheckedChange = {
+                            AppState.useBlur = it
+                            UiEnginePrefs.saveUseBlur(context, it)
+                        },
                     )
                 }
             }
