@@ -1,20 +1,47 @@
 # AGENTS.md
 
-`NekoUi`：`DSHA-Next` 挖空到只剩界面之后的样子。包名 `top.youzix.neko`。
+`NekoUi`：一个可以直接套用的 Android 界面框架。包名 `top.youzix.neko`。
+它不是某个应用，而是应用们共用的那一层：页面骨架、控件、主题、崩溃兜底都在，业务逻辑一概没有。
 
-## 不变量
+## 结构
 
-1. **两套引擎各写一遍**：`ui/miuix/**` 与 `ui/material3/**` 互不共享 Composable，改一个页签必须两个都改。
-2. **不写业务逻辑**：没有网络、没有权限、没有跨进程调用、没有 shell。页面要的数据来自 `demo/`。
-3. **演示数据只有一个来源**：`app/src/main/java/top/youzix/neko/demo/`（首页、终端、网页各一份）。
+| 路径 | 是什么 |
+|---|---|
+| `demo/` | 页面要的全部数据。`HomeDemo` / `ListDemo` / `LogDemo` / `DocsDemo`，换掉这些就是换掉应用内容 |
+| `ui/miuix/**` | Miuix 引擎：首页、列表、组件画廊、设置、关于、许可、液态玻璃底栏、预测性返回 |
+| `ui/material3/**` | Material 3 引擎：同一批页面，另一套实现；`widgets/` 是分段列表等基础控件 |
+| `ui/common/` 之外 | `AppState`（引擎/模糊/主题/返回动画）、`UiEnginePrefs`（持久化）、`MainActivity`（选引擎） |
+| `crash/` | 崩溃记录与独立进程 `:crash` 的崩溃页。**这是框架的一部分，不要删** |
+| `NekoApp` | 装崩溃处理器的地方；`:crash` 进程里不装（否则会叠第二层崩溃页） |
+
+## 三条不变量
+
+1. **两套引擎各写一遍。** `ui/miuix/**` 与 `ui/material3/**` 互不共享 Composable；改一个页签必须两个都改，
+   否则切过去就少东西。共享的只有 `demo/`、`AppState`、`UiEnginePrefs`、`ui/AppIcons`、`ui/predictiveback`、`crash/`。
+2. **不写业务逻辑。** 没有网络、没有权限、没有跨进程调用、没有 shell。需要数据就去 `demo/` 拿。
+3. **崩溃处理必须一直在。** `NekoApp` 里 `CrashHandler.install`、清单里 `:crash` 的 Activity、
+   关于页的「崩溃日志」入口，三处缺一不可。
+
+## 加一个页面（检查清单）
+
+1. `demo/` 里加数据（页面不自己造状态）。
+2. `ui/miuix/<名字>/` 与 `ui/material3/<名字>/` 各写一个 Screen，签名对齐现有页面：
+   miuix 是 `(contentPadding, scrollBehavior[, …])`，Material 是 `(outerPadding, useBlur[, …])`。
+3. 页签：改两个 `*App.kt` 的 `navigationItems`/`labels`、`TAB_*` 常量、`titles`，并确认底部导航放得下。
+4. 二级页：加进 `MiuixSubPage` / `MaterialSubPage` 枚举，在 `PredictiveBackHost` 的 `subPage` 分支里渲染；
+   Material 的二级页自带 `Scaffold` + 返回箭头，miuix 的由外层 `Scaffold` 提供标题栏。
+5. `python3 scripts/klex.py <改过的文件>`（词法 / 括号 / 未使用 import），然后交给 CI。
 
 ## 工作方式
 
 - **不在本地构建。** 这台设备没有 Android SDK，也别装；唯一验证是 GitHub Actions（3～6 分钟一轮）。
-- 改完 `.kt` 先跑一遍 `python3 scripts/klex.py <文件>...`：词法、括号平衡、未使用 import。
-  它看不见类型，缺符号只能靠 CI。
 - 不要凭记忆写 Compose / miuix 的签名。miuix 源码：
   `https://repo1.maven.org/maven2/top/yukonga/miuix/kmp/miuix-ui-android/<版本>/miuix-ui-android-<版本>-sources.jar`。
-- 本机 `write` 工具建不了硬链接（Android 禁 `link(2)`），整份重写用 `cat > file <<'EOF'`。
-- 签名：CI 从 Secrets 读 `KEYSTORE_BASE64` / `KEYSTORE_PASSWORD` / `KEY_ALIAS` / `KEY_PASSWORD`；
+- 整份重写文件用 `cat > file <<'EOF'`；这台机器的 `write` 工具建不了硬链接（Android 禁 `link(2)`）。
+- 签名：CI 从 Secrets 读 `KEYSTORE_BASE64` / `KEYSTORE_PASSWORD` / `KEY_ALIAS` / `KEY_PASSWORD`，
   没有时退回 debug key，APK 仍可安装。
+
+## 许可
+
+本仓库 AGPL-3.0。`ui/miuix/components/`、`ui/material3/components/` 里的状态标签、TonalCard、WarningCard
+移植自 SukiSU-Ultra（GPL-3.0）；其余界面框架来自 NekoPlus（AGPL-3.0）。
