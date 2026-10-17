@@ -42,7 +42,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import top.youzix.neko.demo.Home
-import top.youzix.neko.demo.Overview
 import top.youzix.neko.demo.InfoRow
 import top.youzix.neko.demo.Stat
 import top.youzix.neko.demo.Tone
@@ -52,8 +51,9 @@ import top.youzix.neko.ui.material3.components.StatusTag
 import top.youzix.neko.ui.material3.material3AppBarColor
 import top.youzix.neko.ui.material3.material3BlurEffect
 import top.youzix.neko.ui.material3.rememberMaterial3BlurBackdrop
-import top.youzix.neko.ui.material3.widgets.BaseWidget
-import top.youzix.neko.ui.material3.widgets.SegmentedColumn
+import top.youzix.neko.ui.material3.components.IconTile
+import top.youzix.neko.ui.material3.components.SegmentedColumn
+import top.youzix.neko.ui.material3.components.SegmentedListItem
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 
 /**
@@ -116,24 +116,21 @@ fun MaterialHomeScreen(
             item {
                 SegmentedColumn(
                     title = "概览",
-                    contentPadding = PaddingValues(top = 16.dp, bottom = 8.dp),
+                    modifier = Modifier.padding(top = 16.dp),
                 ) {
                     home.overview.forEach { entry ->
-                        item(key = entry.title) { OverviewRow(entry) }
+                        item(key = entry.title) {
+                            SegmentedListItem(
+                                headlineContent = { Text(entry.title) },
+                                supportingContent = { Text(entry.summary) },
+                                leadingContent = { IconTile(entry.icon, entry.title) },
+                            )
+                        }
                     }
                 }
             }
         }
     }
-}
-
-@Composable
-private fun OverviewRow(entry: Overview) {
-    BaseWidget(
-        title = entry.title,
-        description = entry.summary,
-        iconPlaceholder = false,
-    )
 }
 
 /**

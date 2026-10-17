@@ -46,13 +46,18 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import top.youzix.neko.demo.DocsDemo
+import top.youzix.neko.ui.AppIcons
 import top.youzix.neko.demo.LogDemo
 import top.youzix.neko.ui.material3.components.StatusTag
 import top.youzix.neko.ui.material3.components.TonalCard
 import top.youzix.neko.ui.material3.material3AppBarColor
 import top.youzix.neko.ui.material3.material3BlurEffect
 import top.youzix.neko.ui.material3.rememberMaterial3BlurBackdrop
-import top.youzix.neko.ui.material3.widgets.SwitchWidget
+import top.youzix.neko.ui.material3.components.IconTile
+import top.youzix.neko.ui.material3.components.SegmentedColumn
+import top.youzix.neko.ui.material3.components.SegmentedDropdownItem
+import top.youzix.neko.ui.material3.components.SegmentedListItem
+import top.youzix.neko.ui.material3.components.SegmentedSwitchItem
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 
 /**
@@ -70,6 +75,7 @@ fun MaterialGalleryScreen(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val backdrop = rememberMaterial3BlurBackdrop(useBlur)
     var switchOn by remember { mutableStateOf(true) }
+    var choice by remember { mutableStateOf(0) }
     var sliderValue by remember { mutableStateOf(0.4f) }
     var showDialog by remember { mutableStateOf(false) }
 
@@ -152,14 +158,41 @@ fun MaterialGalleryScreen(
                 }
             }
 
+            item(key = "rows") {
+                SegmentedColumn(title = "列表行") {
+                    item {
+                        SegmentedSwitchItem(
+                            icon = AppIcons.Tune,
+                            title = "开关行",
+                            summary = "打开或关闭一项行为",
+                            checked = switchOn,
+                            onCheckedChange = { switchOn = it },
+                        )
+                    }
+                    item {
+                        SegmentedDropdownItem(
+                            icon = AppIcons.Palette,
+                            title = "下拉行",
+                            summary = "点开选择一个值",
+                            items = listOf("一", "二", "三"),
+                            selectedIndex = choice,
+                            onItemSelected = { choice = it },
+                        )
+                    }
+                    item {
+                        SegmentedListItem(
+                            onClick = { onNotify("整行可点") },
+                            headlineContent = { Text("可点的行") },
+                            supportingContent = { Text("带箭头的行会打开一个二级页") },
+                            leadingContent = { IconTile(AppIcons.About, "可点的行") },
+                            trailingContent = { Icon(AppIcons.ChevronRight, null) },
+                        )
+                    }
+                }
+            }
+
             item(key = "controls") {
-                Section(title = "开关与滑杆") {
-                    SwitchWidget(
-                        title = "开关",
-                        description = "打开或关闭一项行为",
-                        checked = switchOn,
-                        onCheckedChange = { switchOn = it },
-                    )
+                Section(title = "滑杆") {
                     Slider(value = sliderValue, onValueChange = { sliderValue = it })
                     Text(
                         text = "滑杆 ${(sliderValue * 100).toInt()}%",

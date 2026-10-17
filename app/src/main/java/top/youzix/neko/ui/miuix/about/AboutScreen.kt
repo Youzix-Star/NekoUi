@@ -5,6 +5,7 @@
 
 package top.youzix.neko.ui.miuix.about
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -20,6 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -32,10 +34,12 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import top.youzix.neko.AppState
 import top.youzix.neko.BuildConfig
 import top.youzix.neko.crash.CrashHandler
 import top.youzix.neko.ui.AppIcons
 import top.youzix.neko.ui.AppMark
+import top.youzix.neko.ui.UiEnginePrefs
 import top.youzix.neko.util.DeviceInfo
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.Card
@@ -80,7 +84,7 @@ fun AboutScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item(key = "header") {
-            AppHeader()
+            AppHeader(onNotify = onNotify)
         }
 
         item(key = "about") {
@@ -122,6 +126,27 @@ fun AboutScreen(
                         },
                         onClick = { deviceInfo = DeviceInfo.snapshot(context) },
                     )
+                }
+            }
+        }
+
+        item(key = "debug") {
+            if (AppState.debugMode) {
+                Column {
+                    SmallTitle(text = "调试")
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        // Verifying the crash screen needs a crash, and waiting for a real bug to
+                        // happen is not a test. Thrown on the main thread so the uncaught handler
+                        // (and the report screen) see it exactly like a real one.
+                        ArrowPreference(
+                            title = "模拟崩溃",
+                            summary = "让应用崩一次，看看崩溃报告页长什么样",
+                            startAction = {
+                                Icon(AppIcons.Debug, null, Modifier.size(22.dp))
+                            },
+                            onClick = { throw IllegalStateException("模拟崩溃：这是调试里手动触发的") },
+                        )
+                    }
                 }
             }
         }
@@ -226,7 +251,10 @@ fun AboutScreen(
 
 /** The brand block: the mark, the name, the version. */
 @Composable
-private fun AppHeader() {
+private fun AppHeader(onNotify: (String) -> Unit) {
+    val context = LocalContext.current
+    var taps by remember { mutableIntStateOf(0) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -250,10 +278,21 @@ private fun AppHeader() {
             color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
         )
         Spacer(modifier = Modifier.height(8.dp))
+        // Seven taps on the signature line put the diagnostic rows on show; nothing says so.
         Text(
             text = "只有界面，没有别的。",
             style = MiuixTheme.textStyles.footnote2,
             color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+            modifier = Modifier.clickable {
+                taps += 1
+                if (taps >= 7) {
+                    taps = 0
+                    val enabled = !AppState.debugMode
+                    AppState.debugMode = enabled
+                    UiEnginePrefs.saveDebugMode(context, enabled)
+                    onNotify(if (enabled) "调试模式已开启" else "调试模式已关闭")
+                }
+            },
         )
     }
 }

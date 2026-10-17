@@ -9,6 +9,7 @@
 
 package top.youzix.neko.ui.material3.about
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -36,6 +37,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -48,16 +50,19 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import top.youzix.neko.AppState
 import top.youzix.neko.BuildConfig
 import top.youzix.neko.crash.CrashHandler
 import top.youzix.neko.ui.AppIcons
 import top.youzix.neko.ui.AppMark
+import top.youzix.neko.ui.UiEnginePrefs
 import top.youzix.neko.util.DeviceInfo
 import top.youzix.neko.ui.material3.material3AppBarColor
 import top.youzix.neko.ui.material3.material3BlurEffect
 import top.youzix.neko.ui.material3.rememberMaterial3BlurBackdrop
-import top.youzix.neko.ui.material3.widgets.NavigationItemWidget
-import top.youzix.neko.ui.material3.widgets.SegmentedColumn
+import top.youzix.neko.ui.material3.components.IconTile
+import top.youzix.neko.ui.material3.components.SegmentedColumn
+import top.youzix.neko.ui.material3.components.SegmentedListItem
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 
 private const val REPOSITORY_URL = "https://github.com/Youzix-Star/NekoUi"
@@ -114,48 +119,78 @@ fun MaterialAboutScreen(
                 .then(backdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier),
             contentPadding = paddingValues + PaddingValues(top = 8.dp, bottom = 24.dp),
         ) {
-            item { AppHeader() }
+            item { AppHeader(onNotify = onNotify) }
 
             item {
-                SegmentedColumn(title = "关于") {
+                SegmentedColumn(
+                    title = "关于",
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                ) {
                     item {
-                        NavigationItemWidget(
-                            icon = AppIcons.SourceCode,
-                            title = "获取源代码",
-                            description = "GitHub 上的源码",
+                        SegmentedListItem(
                             onClick = { uriHandler.openUri(REPOSITORY_URL) },
+                            headlineContent = { Text("获取源代码") },
+                            supportingContent = { Text("GitHub 上的源码") },
+                            leadingContent = { IconTile(AppIcons.SourceCode, "获取源代码") },
+                            trailingContent = { Icon(AppIcons.ChevronRight, null) },
                         )
                     }
                     item {
-                        NavigationItemWidget(
-                            icon = AppIcons.License,
-                            title = "开源许可",
-                            description = "依赖的许可证",
+                        SegmentedListItem(
                             onClick = onOpenLicenses,
+                            headlineContent = { Text("开源许可") },
+                            supportingContent = { Text("依赖的许可证") },
+                            leadingContent = { IconTile(AppIcons.License, "开源许可") },
+                            trailingContent = { Icon(AppIcons.ChevronRight, null) },
                         )
                     }
                     item {
-                        NavigationItemWidget(
-                            icon = AppIcons.Debug,
-                            title = "崩溃日志",
-                            description = if (crashLog.isNullOrBlank()) {
-                                "没有记录"
-                            } else {
-                                "有一条记录，点按查看"
-                            },
+                        SegmentedListItem(
                             onClick = {
                                 crashLog = CrashHandler.read(context)
                                 showCrash = true
                             },
+                            headlineContent = { Text("崩溃日志") },
+                            supportingContent = {
+                                Text(
+                                    if (crashLog.isNullOrBlank()) "没有记录"
+                                    else "有一条记录，点按查看",
+                                )
+                            },
+                            leadingContent = { IconTile(AppIcons.Debug, "崩溃日志") },
+                            trailingContent = { Icon(AppIcons.ChevronRight, null) },
                         )
                     }
                     item {
-                        NavigationItemWidget(
-                            icon = AppIcons.Phones,
-                            title = "设备信息",
-                            description = "机型、系统与显示",
+                        SegmentedListItem(
                             onClick = { deviceInfo = DeviceInfo.snapshot(context) },
+                            headlineContent = { Text("设备信息") },
+                            supportingContent = { Text("机型、系统与显示") },
+                            leadingContent = { IconTile(AppIcons.Phones, "设备信息") },
+                            trailingContent = { Icon(AppIcons.ChevronRight, null) },
                         )
+                    }
+                }
+            }
+
+            if (AppState.debugMode) {
+                item {
+                    SegmentedColumn(
+                        title = "调试",
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    ) {
+                        item {
+                            // Verifying the crash screen needs a crash, and waiting for a real bug
+                            // to happen is not a test.
+                            SegmentedListItem(
+                                onClick = {
+                                    throw IllegalStateException("模拟崩溃：这是调试里手动触发的")
+                                },
+                                headlineContent = { Text("模拟崩溃") },
+                                supportingContent = { Text("让应用崩一次，看看崩溃报告页长什么样") },
+                                leadingContent = { IconTile(AppIcons.Debug, "模拟崩溃") },
+                            )
+                        }
                     }
                 }
             }
@@ -257,7 +292,10 @@ fun MaterialAboutScreen(
 }
 
 @Composable
-private fun AppHeader() {
+private fun AppHeader(onNotify: (String) -> Unit) {
+    val context = LocalContext.current
+    var taps by remember { mutableIntStateOf(0) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -277,10 +315,21 @@ private fun AppHeader() {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(8.dp))
+        // Seven taps on the signature line put the diagnostic rows on show; nothing says so.
         Text(
             text = "只有界面，没有别的。",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.clickable {
+                taps += 1
+                if (taps >= 7) {
+                    taps = 0
+                    val enabled = !AppState.debugMode
+                    AppState.debugMode = enabled
+                    UiEnginePrefs.saveDebugMode(context, enabled)
+                    onNotify(if (enabled) "调试模式已开启" else "调试模式已关闭")
+                }
+            },
         )
     }
 }

@@ -9,7 +9,7 @@
 |---|---|
 | `demo/` | 页面要的全部数据。`HomeDemo` / `ListDemo` / `LogDemo` / `DocsDemo`，换掉这些就是换掉应用内容 |
 | `ui/miuix/**` | Miuix 引擎：首页、列表、组件画廊、设置、关于、许可、液态玻璃底栏、预测性返回 |
-| `ui/material3/**` | Material 3 引擎：同一批页面，另一套实现；`widgets/` 是分段列表等基础控件 |
+| `ui/material3/**` | Material 3 引擎：同一批页面，另一套实现；`components/` 是 SukiSU 的分段列表与状态标签 |
 | `ui/common/` 之外 | `AppState`（引擎/模糊/主题/返回动画）、`UiEnginePrefs`（持久化）、`MainActivity`（选引擎） |
 | `crash/` | 崩溃记录与独立进程 `:crash` 的崩溃页。**这是框架的一部分，不要删** |
 | `NekoApp` | 装崩溃处理器的地方；`:crash` 进程里不装（否则会叠第二层崩溃页） |
@@ -21,6 +21,11 @@
 2. **不写业务逻辑。** 没有网络、没有权限、没有跨进程调用、没有 shell。需要数据就去 `demo/` 拿。
 3. **崩溃处理必须一直在。** `NekoApp` 里 `CrashHandler.install`、清单里 `:crash` 的 Activity、
    关于页的「崩溃日志」入口，三处缺一不可。
+
+## 调试与崩溃
+
+关于页签名行（「只有界面，没有别的。」）连点七下 → 关于页出现「调试 → 模拟崩溃」，
+点它就会真的崩一次，用来验证 `:crash` 崩溃页。状态持久化在 `UiEnginePrefs.debugMode`。
 
 ## 加一个页面（检查清单）
 

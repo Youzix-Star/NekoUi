@@ -29,4 +29,11 @@ object AppState {
 
     /** Which predictive-back animation plays on second-level pages. */
     var predictiveBackStyle by mutableStateOf(PredictiveBackStyle.Miuix)
+
+    /**
+     * Whether the diagnostic rows are on show.
+     *
+     * Kept in memory and on disk: the About page unlocks it by tapping the tagline seven times.
+     */
+    var debugMode by mutableStateOf(false)
 }

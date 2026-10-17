@@ -20,14 +20,19 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.automirrored.outlined.List
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Widgets
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -37,13 +42,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import top.youzix.neko.AppState
 import top.youzix.neko.crash.CrashHandler
-import top.youzix.neko.ui.AppIcons
 import top.youzix.neko.ui.UiEnginePrefs
 import top.youzix.neko.ui.material3.about.MaterialAboutScreen
 import top.youzix.neko.ui.material3.gallery.MaterialGalleryScreen
@@ -107,11 +110,12 @@ private fun MaterialShell(
     val context = LocalContext.current
 
     val labels = listOf("首页", "列表", "组件", "设置")
-    val icons: List<ImageVector> = listOf(
-        AppIcons.Home,
-        AppIcons.List,
-        AppIcons.Gallery,
-        AppIcons.Settings,
+    // Filled icon while selected, outlined while not: SukiSU's bar switches between the two.
+    val navItems = listOf(
+        MaterialNavItem("首页", Icons.Filled.Home, Icons.Outlined.Home),
+        MaterialNavItem("列表", Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List),
+        MaterialNavItem("组件", Icons.Filled.Widgets, Icons.Outlined.Widgets),
+        MaterialNavItem("设置", Icons.Filled.Settings, Icons.Outlined.Settings),
     )
 
     val pagerState = rememberPagerState(pageCount = { labels.size })
@@ -145,20 +149,13 @@ private fun MaterialShell(
                     modifier = Modifier.fillMaxSize(),
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
                     bottomBar = {
-                        NavigationBar {
-                            labels.forEachIndexed { index, label ->
-                                NavigationBarItem(
-                                    // Driven by selectedPage, not the pager's currentPage, so the
-                                    // highlight lands the moment the tab is tapped.
-                                    selected = mainPagerState.selectedPage == index,
-                                    onClick = { mainPagerState.animateToPage(index) },
-                                    icon = {
-                                        Icon(imageVector = icons[index], contentDescription = label)
-                                    },
-                                    label = { Text(label) },
-                                )
-                            }
-                        }
+                        // Driven by selectedPage, not the pager's currentPage, so the highlight
+                        // lands the moment the tab is tapped.
+                        MaterialBottomBar(
+                            items = navItems,
+                            selectedIndex = mainPagerState.selectedPage,
+                            onSelect = { mainPagerState.animateToPage(it) },
+                        )
                     },
                 ) { outerPadding ->
                     HorizontalPager(

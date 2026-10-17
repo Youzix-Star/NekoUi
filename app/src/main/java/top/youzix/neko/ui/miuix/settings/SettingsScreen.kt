@@ -1,6 +1,9 @@
 /*
  * Copyright 2026, Youzix-Star
  * SPDX-License-Identifier: AGPL-3.0-only
+ *
+ * Row layout follows SukiSU-Ultra's SettingsMiuix.kt (GPL-3.0): one card per group, a leading icon
+ * on every row, and a popup dropdown rather than a dialog spinner.
  */
 
 package top.youzix.neko.ui.miuix.settings
@@ -25,20 +28,20 @@ import top.youzix.neko.ui.UiEnginePrefs
 import top.youzix.neko.ui.miuix.ThemeModeOptions
 import top.youzix.neko.ui.predictiveback.PredictiveBackStyle
 import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.preference.ArrowPreference
+import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
-import top.yukonga.miuix.kmp.preference.WindowSpinnerPreference
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
+import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 
 /**
  * 设置 — everything that changes how the shell looks, and the way into everything that describes
- * it. The page itself owns no state: the switches read [AppState] and write it back through the
- * prefs object, which is what makes a change survive a restart.
+ * it. The page owns no state: the rows read [AppState] and write it back through the prefs object,
+ * which is what makes a change survive a restart.
  */
 @Composable
 fun SettingsScreen(
@@ -54,9 +57,9 @@ fun SettingsScreen(
     onOpenLicenses: () -> Unit,
 ) {
     val context = LocalContext.current
-    val themeItems = remember { ThemeModeOptions.map { DropdownItem(text = it.second) } }
-    val engineItems = remember { UiEngine.entries.map { DropdownItem(text = it.label) } }
-    val backStyleItems = remember { PredictiveBackStyle.entries.map { DropdownItem(text = it.label) } }
+    val themeLabels = remember { ThemeModeOptions.map { it.second } }
+    val engineLabels = remember { UiEngine.entries.map { it.label } }
+    val backStyleLabels = remember { PredictiveBackStyle.entries.map { it.label } }
     val selectedThemeIndex = ThemeModeOptions
         .indexOfFirst { it.first == colorSchemeMode }
         .coerceAtLeast(0)
@@ -73,20 +76,23 @@ fun SettingsScreen(
             Column {
                 SmallTitle(text = "外观")
                 Card(modifier = Modifier.fillMaxWidth()) {
-                    WindowSpinnerPreference(
+                    OverlayDropdownPreference(
                         title = "主题模式",
-                        items = themeItems,
+                        summary = "浅色、深色或跟随系统，动态取色跟随壁纸",
+                        items = themeLabels,
                         selectedIndex = selectedThemeIndex,
+                        startAction = { Icon(AppIcons.Palette, null, Modifier.size(22.dp), colorScheme.onBackground) },
                         onSelectedIndexChange = { index ->
                             ThemeModeOptions.getOrNull(index)?.let { onColorSchemeModeChange(it.first) }
                         },
                     )
-                    WindowSpinnerPreference(
+                    OverlayDropdownPreference(
                         title = "预见式返回动画",
-                        summary = "二级页面的返回跟手动画",
-                        items = backStyleItems,
+                        summary = "二级页面返回时的跟手动画",
+                        items = backStyleLabels,
                         selectedIndex = PredictiveBackStyle.entries
                             .indexOf(AppState.predictiveBackStyle).coerceAtLeast(0),
+                        startAction = { Icon(AppIcons.Speed, null, Modifier.size(22.dp), colorScheme.onBackground) },
                         onSelectedIndexChange = { index ->
                             PredictiveBackStyle.entries.getOrNull(index)?.let {
                                 AppState.predictiveBackStyle = it
@@ -97,6 +103,7 @@ fun SettingsScreen(
                     SwitchPreference(
                         title = "液态玻璃底栏",
                         summary = "底栏实时模糊与高光",
+                        startAction = { Icon(AppIcons.BlurOn, null, Modifier.size(22.dp), colorScheme.onBackground) },
                         checked = useLiquidGlass,
                         onCheckedChange = onUseLiquidGlassChange,
                     )
@@ -108,11 +115,12 @@ fun SettingsScreen(
             Column {
                 SmallTitle(text = "引擎")
                 Card(modifier = Modifier.fillMaxWidth()) {
-                    WindowSpinnerPreference(
+                    OverlayDropdownPreference(
                         title = "界面引擎",
                         summary = "切换整套界面实现",
-                        items = engineItems,
+                        items = engineLabels,
                         selectedIndex = UiEngine.entries.indexOf(engine).coerceAtLeast(0),
+                        startAction = { Icon(AppIcons.Gallery, null, Modifier.size(22.dp), colorScheme.onBackground) },
                         onSelectedIndexChange = { index ->
                             UiEngine.entries.getOrNull(index)?.let(onEngineChange)
                         },
@@ -128,17 +136,13 @@ fun SettingsScreen(
                     ArrowPreference(
                         title = "关于 NekoUi",
                         summary = "版本、源码与设备信息",
-                        startAction = {
-                            Icon(AppIcons.About, null, Modifier.size(22.dp))
-                        },
+                        startAction = { Icon(AppIcons.About, null, Modifier.size(22.dp), colorScheme.onBackground) },
                         onClick = onOpenAbout,
                     )
                     ArrowPreference(
                         title = "开源许可",
                         summary = "依赖的许可证",
-                        startAction = {
-                            Icon(AppIcons.License, null, Modifier.size(22.dp))
-                        },
+                        startAction = { Icon(AppIcons.License, null, Modifier.size(22.dp), colorScheme.onBackground) },
                         onClick = onOpenLicenses,
                     )
                 }

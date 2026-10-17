@@ -29,6 +29,7 @@ class MainActivity : ComponentActivity() {
         AppState.engine = UiEnginePrefs.load(this)
         AppState.useBlur = UiEnginePrefs.loadUseBlur(this)
         AppState.predictiveBackStyle = UiEnginePrefs.loadPredictiveBackStyle(this)
+        AppState.debugMode = UiEnginePrefs.loadDebugMode(this)
         setContent {
             when (AppState.engine) {
                 UiEngine.Miuix -> MiuixApp()

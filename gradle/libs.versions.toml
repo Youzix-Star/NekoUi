@@ -1,15 +1,16 @@
 [versions]
 agp = "9.4.0"
 kotlin = "2.4.20"
-composeBom = "2026.08.00"
+composeBom = "2026.09.00"
 # miuix tracks SukiSU-Ultra's manager (GPL-3.0), which this UI is derived from.
 miuix = "0.9.4"
 # material-icons-extended is frozen upstream at 1.7.8; R8 strips what is unused.
 materialIcons = "1.7.8"
 activityCompose = "1.13.0"
-# Pinned: LargeFlexibleTopAppBar and the public *Emphasized typography only exist from alpha27.
+# Pinned: LargeFlexibleTopAppBar, the public *Emphasized typography and ListItemDefaults
+# .segmentedColors/.segmentedShapes (used by the ported SegmentedList) need this alpha.
 # The Compose BOM does not carry material3 yet in the version this project resolves.
-material3 = "1.5.0-alpha27"
+material3 = "1.5.0-alpha28"
 
 [libraries]
 compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }

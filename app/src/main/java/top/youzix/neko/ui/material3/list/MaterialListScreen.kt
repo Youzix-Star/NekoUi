@@ -1,6 +1,8 @@
 /*
  * Copyright 2026, Youzix-Star
  * SPDX-License-Identifier: AGPL-3.0-only
+ *
+ * Rows are SegmentedListItem, from SukiSU-Ultra's SegmentedList (GPL-3.0).
  */
 
 @file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -42,13 +44,13 @@ import top.youzix.neko.demo.ListGroup
 import top.youzix.neko.demo.ListItem
 import top.youzix.neko.demo.TagTone
 import top.youzix.neko.ui.AppIconText
+import top.youzix.neko.ui.material3.components.SegmentedColumn
+import top.youzix.neko.ui.material3.components.SegmentedListItem
+import top.youzix.neko.ui.material3.components.StatusTag
+import top.youzix.neko.ui.material3.components.TonalCard
 import top.youzix.neko.ui.material3.material3AppBarColor
 import top.youzix.neko.ui.material3.material3BlurEffect
 import top.youzix.neko.ui.material3.rememberMaterial3BlurBackdrop
-import top.youzix.neko.ui.material3.components.StatusTag
-import top.youzix.neko.ui.material3.components.TonalCard
-import top.youzix.neko.ui.material3.widgets.BaseWidget
-import top.youzix.neko.ui.material3.widgets.SegmentedColumn
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 
 /**
@@ -92,7 +94,7 @@ fun MaterialListScreen(
                 .fillMaxSize()
                 .then(backdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier),
             contentPadding = PaddingValues(16.dp) + paddingValues + outerPadding,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(13.dp),
         ) {
             item(key = "search") {
                 OutlinedTextField(
@@ -135,11 +137,10 @@ private fun GroupColumn(group: ListGroup, onSelect: (ListItem) -> Unit) {
     SegmentedColumn(title = group.title) {
         group.items.forEach { item ->
             item(key = item.id) {
-                BaseWidget(
-                    title = item.title,
-                    description = item.summary,
-                    iconPlaceholder = false,
+                SegmentedListItem(
                     onClick = { onSelect(item) },
+                    headlineContent = { Text(item.title) },
+                    supportingContent = { Text(item.summary) },
                     trailingContent = {
                         item.tag?.let { tag ->
                             val (background, content) = tagColors(item.tone)

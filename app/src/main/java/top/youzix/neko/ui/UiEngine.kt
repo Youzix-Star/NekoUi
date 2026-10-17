@@ -35,6 +35,7 @@ object UiEnginePrefs {
     private const val KEY_MIUIX_THEME = "miuix_theme"
     private const val KEY_MATERIAL_THEME = "material_theme"
     private const val KEY_DYNAMIC_COLOR = "dynamic_color"
+    private const val KEY_DEBUG_MODE = "debug_mode"
 
     private fun prefs(context: Context) =
         context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -91,6 +92,14 @@ object UiEnginePrefs {
 
     fun saveDynamicColor(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean(KEY_DYNAMIC_COLOR, enabled).apply()
+    }
+
+    /** Whether the diagnostic rows are on show. */
+    fun loadDebugMode(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_DEBUG_MODE, false)
+
+    fun saveDebugMode(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_DEBUG_MODE, enabled).apply()
     }
 
 }

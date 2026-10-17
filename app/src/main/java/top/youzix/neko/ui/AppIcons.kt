@@ -13,8 +13,12 @@ import androidx.compose.material.icons.rounded.BugReport
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.Description
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.List
+import androidx.compose.material.icons.rounded.BlurOn
 import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Widgets
 import androidx.compose.material.icons.rounded.Info
@@ -45,6 +49,12 @@ object AppIcons {
     val List: ImageVector = Icons.AutoMirrored.Rounded.List
     val Gallery: ImageVector = Icons.Rounded.Widgets
     val Settings: ImageVector = Icons.Rounded.Settings
+
+    // 设置页的行首图标
+    val Palette: ImageVector = Icons.Rounded.Palette
+    val Speed: ImageVector = Icons.Rounded.Speed
+    val BlurOn: ImageVector = Icons.Rounded.BlurOn
+    val ChevronRight: ImageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight
     val About: ImageVector = Icons.Rounded.Info
 
     val SourceCode: ImageVector = Icons.Rounded.Code

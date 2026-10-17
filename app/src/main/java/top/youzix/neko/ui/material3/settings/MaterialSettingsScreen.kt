@@ -1,18 +1,24 @@
 /*
  * Copyright 2026, Youzix-Star
  * SPDX-License-Identifier: AGPL-3.0-only
+ *
+ * Row layout follows SukiSU-Ultra's SettingsMaterial.kt (GPL-3.0): segmented groups, one leading
+ * icon per row, and a chevron on the rows that open a second-level page.
  */
 
 @file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 
 package top.youzix.neko.ui.material3.settings
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.plus
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -28,13 +34,14 @@ import top.youzix.neko.ui.AppIcons
 import top.youzix.neko.ui.UiEngine
 import top.youzix.neko.ui.UiEnginePrefs
 import top.youzix.neko.ui.material3.ThemeMode
+import top.youzix.neko.ui.material3.components.IconTile
+import top.youzix.neko.ui.material3.components.SegmentedColumn
+import top.youzix.neko.ui.material3.components.SegmentedDropdownItem
+import top.youzix.neko.ui.material3.components.SegmentedListItem
+import top.youzix.neko.ui.material3.components.SegmentedSwitchItem
 import top.youzix.neko.ui.material3.material3AppBarColor
 import top.youzix.neko.ui.material3.material3BlurEffect
 import top.youzix.neko.ui.material3.rememberMaterial3BlurBackdrop
-import top.youzix.neko.ui.material3.widgets.DropDownMenuWidget
-import top.youzix.neko.ui.material3.widgets.NavigationItemWidget
-import top.youzix.neko.ui.material3.widgets.SegmentedColumn
-import top.youzix.neko.ui.material3.widgets.SwitchWidget
 import top.youzix.neko.ui.predictiveback.PredictiveBackStyle
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 
@@ -81,93 +88,105 @@ fun MaterialSettingsScreen(
             )
         },
     ) { paddingValues ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .then(backdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier),
-            contentPadding = paddingValues + outerPadding,
+                .then(backdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier)
+                .verticalScroll(rememberScrollState())
+                .padding(paddingValues + outerPadding)
+                .padding(vertical = 8.dp),
         ) {
-            item {
-                SegmentedColumn(title = "外观") {
-                    item {
-                        DropDownMenuWidget(
-                            title = "主题模式",
-                            choice = ThemeMode.entries.indexOf(themeMode).coerceAtLeast(0),
-                            data = ThemeMode.entries.map { it.label },
-                            onChoiceChange = { index ->
-                                ThemeMode.entries.getOrNull(index)?.let(onThemeModeChange)
-                            },
-                        )
-                    }
-                    item {
-                        SwitchWidget(
-                            title = "动态取色",
-                            description = "跟随壁纸取色",
-                            checked = dynamicColor,
-                            onCheckedChange = onDynamicColorChange,
-                        )
-                    }
-                    item {
-                        SwitchWidget(
-                            title = "顶栏模糊",
-                            description = "滚动时顶栏的半透明模糊",
-                            checked = useBlurEnabled,
-                            onCheckedChange = onUseBlurChange,
-                        )
-                    }
-                    item {
-                        DropDownMenuWidget(
-                            icon = AppIcons.Back,
-                            title = "预见式返回动画",
-                            description = "二级页面返回时的跟手动画",
-                            choice = PredictiveBackStyle.entries
-                                .indexOf(predictiveBackStyle).coerceAtLeast(0),
-                            data = PredictiveBackStyle.entries.map { it.label },
-                            onChoiceChange = { index ->
-                                PredictiveBackStyle.entries.getOrNull(index)?.let {
-                                    AppState.predictiveBackStyle = it
-                                    UiEnginePrefs.savePredictiveBackStyle(context, it)
-                                }
-                            },
-                        )
-                    }
+            SegmentedColumn(
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 13.dp),
+                title = "外观",
+            ) {
+                item {
+                    SegmentedDropdownItem(
+                        icon = AppIcons.Palette,
+                        title = "主题模式",
+                        summary = "浅色、深色或跟随系统",
+                        items = ThemeMode.entries.map { it.label },
+                        selectedIndex = ThemeMode.entries.indexOf(themeMode).coerceAtLeast(0),
+                        onItemSelected = { index ->
+                            ThemeMode.entries.getOrNull(index)?.let(onThemeModeChange)
+                        },
+                    )
+                }
+                item {
+                    SegmentedSwitchItem(
+                        icon = AppIcons.Tune,
+                        title = "动态取色",
+                        summary = "跟随壁纸取色",
+                        checked = dynamicColor,
+                        onCheckedChange = onDynamicColorChange,
+                    )
+                }
+                item {
+                    SegmentedSwitchItem(
+                        icon = AppIcons.BlurOn,
+                        title = "顶栏模糊",
+                        summary = "滚动时顶栏的半透明模糊",
+                        checked = useBlurEnabled,
+                        onCheckedChange = onUseBlurChange,
+                    )
+                }
+                item {
+                    SegmentedDropdownItem(
+                        icon = AppIcons.Speed,
+                        title = "预见式返回动画",
+                        summary = "二级页面返回时的跟手动画",
+                        items = PredictiveBackStyle.entries.map { it.label },
+                        selectedIndex = PredictiveBackStyle.entries
+                            .indexOf(predictiveBackStyle).coerceAtLeast(0),
+                        onItemSelected = { index ->
+                            PredictiveBackStyle.entries.getOrNull(index)?.let {
+                                AppState.predictiveBackStyle = it
+                                UiEnginePrefs.savePredictiveBackStyle(context, it)
+                            }
+                        },
+                    )
                 }
             }
 
-            item {
-                SegmentedColumn(title = "引擎") {
-                    item {
-                        DropDownMenuWidget(
-                            title = "界面引擎",
-                            description = "切换整套界面实现",
-                            choice = UiEngine.entries.indexOf(engine).coerceAtLeast(0),
-                            data = UiEngine.entries.map { it.label },
-                            onChoiceChange = { index ->
-                                UiEngine.entries.getOrNull(index)?.let(onEngineChange)
-                            },
-                        )
-                    }
+            SegmentedColumn(
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 13.dp),
+                title = "引擎",
+            ) {
+                item {
+                    SegmentedDropdownItem(
+                        icon = AppIcons.Gallery,
+                        title = "界面引擎",
+                        summary = "切换整套界面实现",
+                        items = UiEngine.entries.map { it.label },
+                        selectedIndex = UiEngine.entries.indexOf(engine).coerceAtLeast(0),
+                        onItemSelected = { index ->
+                            UiEngine.entries.getOrNull(index)?.let(onEngineChange)
+                        },
+                    )
                 }
             }
 
-            item {
-                SegmentedColumn(title = "关于") {
-                    item {
-                        NavigationItemWidget(
-                            icon = AppIcons.About,
-                            title = "关于 NekoUi",
-                            description = "版本、源码与设备信息",
-                            onClick = onOpenAbout,
-                        )
-                    }
-                    item {
-                        NavigationItemWidget(
-                            icon = AppIcons.License,
-                            title = "开源许可",
-                            description = "依赖的许可证",
-                            onClick = onOpenLicenses,
-                        )
-                    }
+            SegmentedColumn(
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 13.dp),
+                title = "关于",
+            ) {
+                item {
+                    SegmentedListItem(
+                        onClick = onOpenAbout,
+                        headlineContent = { Text("关于 NekoUi") },
+                        supportingContent = { Text("版本、源码与设备信息") },
+                        leadingContent = { IconTile(AppIcons.About, "关于 NekoUi") },
+                        trailingContent = { Icon(AppIcons.ChevronRight, null) },
+                    )
+                }
+                item {
+                    SegmentedListItem(
+                        onClick = onOpenLicenses,
+                        headlineContent = { Text("开源许可") },
+                        supportingContent = { Text("依赖的许可证") },
+                        leadingContent = { IconTile(AppIcons.License, "开源许可") },
+                        trailingContent = { Icon(AppIcons.ChevronRight, null) },
+                    )
                 }
             }
         }
