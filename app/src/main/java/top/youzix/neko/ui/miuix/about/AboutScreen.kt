@@ -308,6 +308,42 @@ private fun AboutContent(
             }
         }
     }
+
+    update?.let { available ->
+        OverlayDialog(
+            show = true,
+            title = "发现新版本 v${available.version}",
+            onDismissRequest = { update = null },
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (available.notes.isBlank()) {
+                    Text("这个版本没有写更新说明。", style = MiuixTheme.textStyles.body2)
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 320.dp)
+                            .verticalScroll(rememberScrollState()),
+                    ) {
+                        Text(available.notes, style = MiuixTheme.textStyles.footnote1)
+                    }
+                }
+                Button(
+                    onClick = {
+                        val target = available.apkUrl
+                        if (target != null) uriHandler.openUri(target) else UpdateChecker.openReleasePage(context)
+                        update = null
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(if (available.apkUrl != null) "下载" else "打开发布页")
+                }
+                Button(onClick = { update = null }, modifier = Modifier.fillMaxWidth()) {
+                    Text("关闭")
+                }
+            }
+        }
+    }
 }
 
 /** The brand block: the mark, the name, the version. */
@@ -355,41 +391,5 @@ private fun AppHeader(onNotify: (String) -> Unit) {
                 }
             },
         )
-    }
-
-    update?.let { available ->
-        OverlayDialog(
-            show = true,
-            title = "发现新版本 v${available.version}",
-            onDismissRequest = { update = null },
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                if (available.notes.isBlank()) {
-                    Text("这个版本没有写更新说明。", style = MiuixTheme.textStyles.body2)
-                } else {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 320.dp)
-                            .verticalScroll(rememberScrollState()),
-                    ) {
-                        Text(available.notes, style = MiuixTheme.textStyles.footnote1)
-                    }
-                }
-                Button(
-                    onClick = {
-                        val target = available.apkUrl
-                        if (target != null) uriHandler.openUri(target) else UpdateChecker.openReleasePage(context)
-                        update = null
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(if (available.apkUrl != null) "下载" else "打开发布页")
-                }
-                Button(onClick = { update = null }, modifier = Modifier.fillMaxWidth()) {
-                    Text("关闭")
-                }
-            }
-        }
     }
 }
