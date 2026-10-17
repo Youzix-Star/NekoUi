@@ -97,9 +97,7 @@ fun MaterialGalleryScreen(
         ),
     ) { paddingValues ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .then(backdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier),
+            modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp) + paddingValues + outerPadding,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
