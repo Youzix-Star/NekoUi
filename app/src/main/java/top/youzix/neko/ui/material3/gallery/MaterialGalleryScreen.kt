@@ -12,6 +12,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,7 +33,6 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -51,15 +54,13 @@ import top.youzix.neko.ui.AppIcons
 import top.youzix.neko.demo.LogDemo
 import top.youzix.neko.ui.material3.components.StatusTag
 import top.youzix.neko.ui.material3.components.TonalCard
-import top.youzix.neko.ui.material3.material3AppBarColor
-import top.youzix.neko.ui.material3.material3BlurEffect
-import top.youzix.neko.ui.material3.rememberMaterial3BlurBackdrop
+import top.youzix.neko.ui.material3.components.ExpressiveScaffold
+import top.youzix.neko.ui.material3.components.expressiveTopAppBarColors
 import top.youzix.neko.ui.material3.components.IconTile
 import top.youzix.neko.ui.material3.components.SegmentedColumn
 import top.youzix.neko.ui.material3.components.SegmentedDropdownItem
 import top.youzix.neko.ui.material3.components.SegmentedListItem
 import top.youzix.neko.ui.material3.components.SegmentedSwitchItem
-import top.yukonga.miuix.kmp.blur.layerBackdrop
 
 /**
  * 组件 — every control the shell offers, on one page.
@@ -70,32 +71,30 @@ import top.yukonga.miuix.kmp.blur.layerBackdrop
 @Composable
 fun MaterialGalleryScreen(
     outerPadding: PaddingValues,
-    useBlur: Boolean,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val backdrop = rememberMaterial3BlurBackdrop(useBlur)
     var switchOn by remember { mutableStateOf(true) }
     var choice by remember { mutableStateOf(0) }
     var sliderValue by remember { mutableStateOf(0.4f) }
     var showDialog by remember { mutableStateOf(false) }
 
-    Scaffold(
+    ExpressiveScaffold(
         modifier = Modifier
             .nestedScroll(scrollBehavior.nestedScrollConnection)
             .fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
         topBar = {
             LargeFlexibleTopAppBar(
-                modifier = Modifier.material3BlurEffect(backdrop),
-                title = { Text("组件", modifier = Modifier.padding(start = 12.dp)) },
-                scrollBehavior = scrollBehavior,
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = backdrop.material3AppBarColor(),
-                    titleContentColor = MaterialTheme.colorScheme.onBackground,
-                    scrolledContainerColor = backdrop.material3AppBarColor(),
+                title = { Text("组件") },
+                colors = expressiveTopAppBarColors(),
+                windowInsets = WindowInsets.safeDrawing.only(
+                    WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
                 ),
+                scrollBehavior = scrollBehavior,
             )
         },
+        contentWindowInsets = WindowInsets.safeDrawing.only(
+            WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
+        ),
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier

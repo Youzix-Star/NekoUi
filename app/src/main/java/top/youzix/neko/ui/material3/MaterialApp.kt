@@ -147,7 +147,6 @@ private fun MaterialShell(
                         when (page) {
                             TAB_HOME -> MaterialHomeScreen(
                                 outerPadding = outerPadding,
-                                useBlur = AppState.useBlur,
                                 onOpenLink = { target ->
                                     when (target) {
                                         HomeTarget.Gallery -> mainPagerState.animateToPage(TAB_GALLERY)
@@ -158,14 +157,10 @@ private fun MaterialShell(
 
                             TAB_LIST -> MaterialListScreen(outerPadding = outerPadding)
 
-                            TAB_GALLERY -> MaterialGalleryScreen(
-                                outerPadding = outerPadding,
-                                useBlur = AppState.useBlur,
-                            )
+                            TAB_GALLERY -> MaterialGalleryScreen(outerPadding = outerPadding)
 
                             TAB_SETTINGS -> MaterialSettingsScreen(
                                 outerPadding = outerPadding,
-                                useBlur = AppState.useBlur,
                                 engine = engine,
                                 onEngineChange = onEngineChange,
                                 onOpenAbout = { navigator.push(Route.About) },

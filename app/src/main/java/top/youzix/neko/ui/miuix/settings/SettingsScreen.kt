@@ -62,7 +62,7 @@ fun SettingsScreen(
                 Card(modifier = Modifier.fillMaxWidth()) {
                     OverlayDropdownPreference(
                         title = "主题模式",
-                        summary = "跟随系统、浅色或深色",
+                        summary = "跟随系统、浅色或深色（动态取色）",
                         items = modeLabels,
                         selectedIndex = ColorMode.entries.indexOf(AppState.colorMode).coerceAtLeast(0),
                         startAction = { Icon(AppIcons.Palette, null, Modifier.size(22.dp), colorScheme.onBackground) },

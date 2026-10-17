@@ -25,10 +25,11 @@ enum class ColorMode(val label: String) {
         System -> isSystemInDarkTheme()
     }
 
+    /** The miuix engine always renders dynamic colour; the mode only picks light or dark. */
     fun toMiuix(): ColorSchemeMode = when (this) {
-        System -> ColorSchemeMode.System
-        Light -> ColorSchemeMode.Light
-        Dark -> ColorSchemeMode.Dark
+        System -> ColorSchemeMode.MonetSystem
+        Light -> ColorSchemeMode.MonetLight
+        Dark -> ColorSchemeMode.MonetDark
     }
 
     companion object {

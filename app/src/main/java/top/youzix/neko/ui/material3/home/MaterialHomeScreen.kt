@@ -34,7 +34,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -48,6 +48,10 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -65,10 +69,8 @@ import top.youzix.neko.ui.material3.components.IconTile
 import top.youzix.neko.ui.material3.components.SegmentedColumn
 import top.youzix.neko.ui.material3.components.SegmentedListItem
 import top.youzix.neko.ui.material3.components.StatusTag
-import top.youzix.neko.ui.material3.material3AppBarColor
-import top.youzix.neko.ui.material3.material3BlurEffect
-import top.youzix.neko.ui.material3.rememberMaterial3BlurBackdrop
-import top.yukonga.miuix.kmp.blur.layerBackdrop
+import top.youzix.neko.ui.material3.components.ExpressiveScaffold
+import top.youzix.neko.ui.material3.components.expressiveTopAppBarColors
 
 private val HeroShape = RoundedCornerShape(28.dp)
 private val TileShape = RoundedCornerShape(22.dp)
@@ -79,37 +81,36 @@ private val TileShape = RoundedCornerShape(22.dp)
 @Composable
 fun MaterialHomeScreen(
     outerPadding: PaddingValues,
-    useBlur: Boolean,
     onOpenLink: (HomeTarget) -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val backdrop = rememberMaterial3BlurBackdrop(useBlur)
     val home = demoHome()
 
-    Scaffold(
+    // SukiSU's page chrome, verbatim: an expressive scaffold whose insets leave the bottom and
+    // the sides to the caller, and a large app bar with the expressive colours.
+    ExpressiveScaffold(
         modifier = Modifier
             .nestedScroll(scrollBehavior.nestedScrollConnection)
             .fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
         topBar = {
             LargeFlexibleTopAppBar(
-                modifier = Modifier.material3BlurEffect(backdrop),
-                title = { Text("NekoUi", modifier = Modifier.padding(start = 12.dp)) },
-                scrollBehavior = scrollBehavior,
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = backdrop.material3AppBarColor(),
-                    titleContentColor = MaterialTheme.colorScheme.onBackground,
-                    scrolledContainerColor = backdrop.material3AppBarColor(),
+                title = { Text("NekoUi") },
+                colors = expressiveTopAppBarColors(),
+                windowInsets = WindowInsets.safeDrawing.only(
+                    WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
                 ),
+                scrollBehavior = scrollBehavior,
             )
         },
+        contentWindowInsets = WindowInsets.safeDrawing.only(
+            WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
+        ),
     ) { paddingValues ->
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .then(backdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier)
                 .verticalScroll(rememberScrollState())
-                .padding(paddingValues + outerPadding)
+                .padding(paddingValues)
+                .padding(outerPadding)
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
