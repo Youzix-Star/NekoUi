@@ -264,6 +264,6 @@ private fun colorsFor(tone: Tone): Pair<Color, Color> = when (tone) {
     Tone.OK -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
     Tone.WARN, Tone.BAD ->
         MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
-    Tone.BUSY, Tone.IDLE ->
+    Tone.BUSY, Tone.IDLE, Tone.ACCENT ->
         MaterialTheme.colorScheme.surfaceContainerHigh to MaterialTheme.colorScheme.onSurface
 }

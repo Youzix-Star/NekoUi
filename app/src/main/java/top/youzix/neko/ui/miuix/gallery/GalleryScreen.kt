@@ -170,7 +170,7 @@ fun GalleryScreen(
             Section(title = "调色板") {
                 PaletteRow("primary", MiuixTheme.colorScheme.primary)
                 PaletteRow("secondary", MiuixTheme.colorScheme.secondary)
-                PaletteRow("tertiary", MiuixTheme.colorScheme.tertiary)
+                PaletteRow("tertiary", MiuixTheme.colorScheme.tertiaryContainer)
                 PaletteRow("error", MiuixTheme.colorScheme.error)
                 PaletteRow("surface", MiuixTheme.colorScheme.surface)
                 PaletteRow("surfaceContainer", MiuixTheme.colorScheme.surfaceContainerHigh)
