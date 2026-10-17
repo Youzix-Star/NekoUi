@@ -35,15 +35,17 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import top.youzix.neko.AppState
+import top.youzix.neko.crash.CrashHandler
 import top.youzix.neko.ui.AppIcons
 import top.youzix.neko.ui.UiEngine
 import top.youzix.neko.ui.UiEnginePrefs
 import top.youzix.neko.ui.miuix.about.AboutScreen
+import top.youzix.neko.ui.miuix.gallery.GalleryScreen
 import top.youzix.neko.ui.miuix.home.HomeScreen
 import top.youzix.neko.ui.miuix.licenses.LicensesScreen
+import top.youzix.neko.ui.miuix.list.ListScreen
 import top.youzix.neko.ui.miuix.liquid.FloatingBottomBar
-import top.youzix.neko.ui.miuix.terminal.TerminalScreen
-import top.youzix.neko.ui.miuix.web.WebScreen
+import top.youzix.neko.ui.miuix.settings.SettingsScreen
 import top.youzix.neko.ui.predictiveback.PredictiveBackHost
 import top.youzix.neko.ui.rememberMainPagerState
 import top.yukonga.miuix.kmp.basic.Icon
@@ -62,9 +64,9 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 const val TAB_HOME = 0
-const val TAB_WEB = 1
-const val TAB_TERMINAL = 2
-const val TAB_ABOUT = 3
+const val TAB_LIST = 1
+const val TAB_GALLERY = 2
+const val TAB_SETTINGS = 3
 
 /**
  * Second-level pages.
@@ -73,14 +75,15 @@ const val TAB_ABOUT = 3
  * transition (which previews the *parent* you are returning to) has no meaning there.
  */
 enum class MiuixSubPage(val title: String) {
+    About("关于"),
     Licenses("开源许可"),
 }
 
 /** The miuix engine: large-title app bar, a pager of tabs, and the liquid-glass bottom bar. */
 @Composable
 fun MiuixApp() {
-    var colorSchemeMode by remember { mutableStateOf(ColorSchemeMode.MonetSystem) }
     val context = LocalContext.current
+    var colorSchemeMode by remember { mutableStateOf(UiEnginePrefs.loadMiuixTheme(context)) }
 
     // One persisted switch drives translucency in both engines: this engine's liquid-glass
     // bottom bar, and the Material 3 engine's blurred top bar.
@@ -89,7 +92,10 @@ fun MiuixApp() {
     MiuixAppTheme(colorSchemeMode = colorSchemeMode) {
         MiuixShell(
             colorSchemeMode = colorSchemeMode,
-            onColorSchemeModeChange = { colorSchemeMode = it },
+            onColorSchemeModeChange = {
+                colorSchemeMode = it
+                UiEnginePrefs.saveMiuixTheme(context, it)
+            },
             useLiquidGlass = useLiquidGlass,
             onUseLiquidGlassChange = {
                 AppState.useBlur = it
@@ -118,12 +124,12 @@ fun MiuixShell(
     val navigationItems = remember {
         listOf(
             NavigationItem(label = "首页", icon = AppIcons.Home),
-            NavigationItem(label = "网页", icon = AppIcons.Web),
-            NavigationItem(label = "终端", icon = AppIcons.Terminal),
-            NavigationItem(label = "关于", icon = AppIcons.About),
+            NavigationItem(label = "列表", icon = AppIcons.List),
+            NavigationItem(label = "组件", icon = AppIcons.Gallery),
+            NavigationItem(label = "设置", icon = AppIcons.Settings),
         )
     }
-    val titles = remember { listOf("NekoUi", "网页", "终端", "关于") }
+    val titles = remember { listOf("NekoUi", "列表", "组件", "设置") }
 
     val pagerState = rememberPagerState(pageCount = { navigationItems.size })
     val mainPagerState = rememberMainPagerState(pagerState)
@@ -143,12 +149,10 @@ fun MiuixShell(
     // Adopt the pager's position after the user swipes between tabs by hand.
     LaunchedEffect(pagerState.currentPage) {
         mainPagerState.syncPage()
+        CrashHandler.note("页签 ${titles.getOrNull(pagerState.currentPage) ?: pagerState.currentPage}")
     }
 
     // ---- level-1 back: no predictive visual, just the tab-switch animation back to home ----
-    // Armed only while a tab is showing and it is not the first one, mirroring the reference
-    // project's "we are on the main route and the back stack is empty" condition. While a
-    // second-level page is open, its own PredictiveBackHandler owns the gesture instead.
     BackHandler(enabled = subPage == null && mainPagerState.selectedPage != 0) {
         mainPagerState.animateToPage(0)
     }
@@ -176,6 +180,7 @@ fun MiuixShell(
                     engine = engine,
                     onEngineChange = onEngineChange,
                     onNotify = notify,
+                    onOpenAbout = { subPage = MiuixSubPage.About },
                     onOpenLicenses = { subPage = MiuixSubPage.Licenses },
                     onTabSelected = { index -> mainPagerState.animateToPage(index) },
                 )
@@ -183,11 +188,10 @@ fun MiuixShell(
             subPage = { closeSubPage ->
                 val page = subPage
                 if (page != null) {
-                    // One scroll behaviour, handed to the app bar *and* to the page below it. Giving
-                    // it to the page alone is what used to stop this screen from scrolling: the
-                    // behaviour collapses the app bar on every upward drag, and with no app bar
-                    // bound to it there was no height limit to stop at, so it swallowed the scroll.
+                    // One scroll behaviour, handed to the app bar *and* to the page below it: giving
+                    // it to the page alone is what stops a page from scrolling.
                     val pageScrollBehavior = MiuixScrollBehavior()
+                    LaunchedEffect(page) { CrashHandler.note("二级页面 ${page.title}") }
                     Scaffold(
                         topBar = {
                             TopAppBar(
@@ -212,6 +216,13 @@ fun MiuixShell(
                             bottom = innerPadding.calculateBottomPadding() + 24.dp,
                         )
                         when (page) {
+                            MiuixSubPage.About -> AboutScreen(
+                                contentPadding = subPadding,
+                                scrollBehavior = pageScrollBehavior,
+                                onOpenLicenses = { subPage = MiuixSubPage.Licenses },
+                                onNotify = notify,
+                            )
+
                             MiuixSubPage.Licenses -> LicensesScreen(contentPadding = subPadding)
                         }
                     }
@@ -220,8 +231,7 @@ fun MiuixShell(
         )
 
         // The host lives here, not inside the tab Scaffold: a second-level page is drawn over that
-        // Scaffold, so a message posted from one used to appear behind it. From the root it sits on
-        // top of everything, the way a toast would.
+        // Scaffold, so a message posted from one would otherwise appear behind it.
         SnackbarHost(
             state = snackbarHostState,
             modifier = Modifier
@@ -250,6 +260,7 @@ private fun MiuixTabs(
     engine: UiEngine,
     onEngineChange: (UiEngine) -> Unit,
     onNotify: (String) -> Unit,
+    onOpenAbout: () -> Unit,
     onOpenLicenses: () -> Unit,
     onTabSelected: (Int) -> Unit,
 ) {
@@ -314,17 +325,18 @@ private fun MiuixTabs(
                         scrollBehavior = scrollBehavior,
                     )
 
-                    TAB_WEB -> WebScreen(
+                    TAB_LIST -> ListScreen(
                         contentPadding = pagePadding,
                         scrollBehavior = scrollBehavior,
                     )
 
-                    TAB_TERMINAL -> TerminalScreen(
+                    TAB_GALLERY -> GalleryScreen(
                         contentPadding = pagePadding,
                         scrollBehavior = scrollBehavior,
+                        onNotify = onNotify,
                     )
 
-                    else -> AboutScreen(
+                    else -> SettingsScreen(
                         contentPadding = pagePadding,
                         scrollBehavior = scrollBehavior,
                         colorSchemeMode = colorSchemeMode,
@@ -333,8 +345,8 @@ private fun MiuixTabs(
                         onUseLiquidGlassChange = useLiquidGlassChange,
                         engine = engine,
                         onEngineChange = onEngineChange,
+                        onOpenAbout = onOpenAbout,
                         onOpenLicenses = onOpenLicenses,
-                        onNotify = onNotify,
                     )
                 }
             }

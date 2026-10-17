@@ -48,6 +48,7 @@ import top.youzix.neko.demo.Stat
 import top.youzix.neko.demo.Tone
 import top.youzix.neko.demo.demoHome
 import top.youzix.neko.ui.material3.CornerRadius
+import top.youzix.neko.ui.material3.components.StatusTag
 import top.youzix.neko.ui.material3.material3AppBarColor
 import top.youzix.neko.ui.material3.material3BlurEffect
 import top.youzix.neko.ui.material3.rememberMaterial3BlurBackdrop
@@ -175,6 +176,18 @@ private fun StatusCard(home: Home) {
                     color = content.copy(alpha = 0.75f),
                     modifier = Modifier.padding(top = 8.dp),
                 )
+                Row(
+                    modifier = Modifier.padding(top = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    home.tags.forEach { tag ->
+                        StatusTag(
+                            label = tag.label,
+                            backgroundColor = content.copy(alpha = 0.12f),
+                            contentColor = content,
+                        )
+                    }
+                }
             }
         }
     }

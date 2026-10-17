@@ -38,36 +38,42 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import top.youzix.neko.AppState
+import top.youzix.neko.crash.CrashHandler
 import top.youzix.neko.ui.AppIcons
+import top.youzix.neko.ui.UiEnginePrefs
 import top.youzix.neko.ui.material3.about.MaterialAboutScreen
+import top.youzix.neko.ui.material3.gallery.MaterialGalleryScreen
 import top.youzix.neko.ui.material3.home.MaterialHomeScreen
 import top.youzix.neko.ui.material3.licenses.MaterialLicensesScreen
-import top.youzix.neko.ui.material3.terminal.MaterialTerminalScreen
-import top.youzix.neko.ui.material3.web.MaterialWebScreen
+import top.youzix.neko.ui.material3.list.MaterialListScreen
+import top.youzix.neko.ui.material3.settings.MaterialSettingsScreen
 import top.youzix.neko.ui.material3.widgets.SwipeableSnackbarHost
 import top.youzix.neko.ui.predictiveback.PredictiveBackHost
 import top.youzix.neko.ui.rememberMainPagerState
 
 private const val TAB_HOME = 0
-private const val TAB_WEB = 1
-private const val TAB_TERMINAL = 2
-private const val TAB_ABOUT = 3
+private const val TAB_LIST = 1
+private const val TAB_GALLERY = 2
+private const val TAB_SETTINGS = 3
 
 /**
  * Second-level pages. Only these take part in predictive back: switching between the bottom
  * navigation tabs moves between siblings, so there is no parent screen to preview.
  */
 private enum class MaterialSubPage(val title: String) {
+    About("关于"),
     Licenses("开源许可"),
 }
 
 @Composable
 fun MaterialApp() {
-    var themeMode by remember { mutableStateOf(ThemeMode.System) }
-    var dynamicColor by remember { mutableStateOf(true) }
+    val context = LocalContext.current
+    var themeMode by remember { mutableStateOf(UiEnginePrefs.loadMaterialTheme(context)) }
+    var dynamicColor by remember { mutableStateOf(UiEnginePrefs.loadDynamicColor(context)) }
     val darkTheme = when (themeMode) {
         ThemeMode.System -> isSystemInDarkTheme()
         ThemeMode.Light -> false
@@ -77,9 +83,15 @@ fun MaterialApp() {
     MaterialAppTheme(darkTheme = darkTheme, dynamicColor = dynamicColor) {
         MaterialShell(
             themeMode = themeMode,
-            onThemeModeChange = { themeMode = it },
+            onThemeModeChange = {
+                themeMode = it
+                UiEnginePrefs.saveMaterialTheme(context, it)
+            },
             dynamicColor = dynamicColor,
-            onDynamicColorChange = { dynamicColor = it },
+            onDynamicColorChange = {
+                dynamicColor = it
+                UiEnginePrefs.saveDynamicColor(context, it)
+            },
         )
     }
 }
@@ -92,13 +104,14 @@ private fun MaterialShell(
     onDynamicColorChange: (Boolean) -> Unit,
 ) {
     var subPage by remember { mutableStateOf<MaterialSubPage?>(null) }
+    val context = LocalContext.current
 
-    val labels = listOf("首页", "网页", "终端", "关于")
+    val labels = listOf("首页", "列表", "组件", "设置")
     val icons: List<ImageVector> = listOf(
         AppIcons.Home,
-        AppIcons.Web,
-        AppIcons.Terminal,
-        AppIcons.About,
+        AppIcons.List,
+        AppIcons.Gallery,
+        AppIcons.Settings,
     )
 
     val pagerState = rememberPagerState(pageCount = { labels.size })
@@ -112,20 +125,16 @@ private fun MaterialShell(
     // Adopt the pager's position after the user swipes between tabs by hand.
     LaunchedEffect(pagerState.currentPage) {
         mainPagerState.syncPage()
+        CrashHandler.note("页签 ${labels.getOrNull(pagerState.currentPage) ?: pagerState.currentPage}")
     }
 
     // ---- level-1 back: no predictive visual, just the tab-switch animation back to home ----
-    // Only armed while a tab is showing and it is not the first one, mirroring the reference
-    // project's "we are on the main route and the back stack is empty" condition. When a
-    // second-level page is open, its own PredictiveBackHandler owns the gesture instead.
     BackHandler(enabled = subPage == null && mainPagerState.selectedPage != 0) {
         mainPagerState.animateToPage(0)
     }
 
     // ---- second-level pages ----
-    // A level-two page owns its whole surface, app bar included, exactly as the four tabs do. The
-    // shell used to stack a second, large app bar on top of the page's own, which is what pushed
-    // that page's first control a third of a screen down the screen.
+    // A level-two page owns its whole surface, app bar included, exactly as the four tabs do.
     Box(modifier = Modifier.fillMaxSize()) {
         PredictiveBackHost(
             subPageOpen = subPage != null,
@@ -163,32 +172,53 @@ private fun MaterialShell(
                                 useBlur = AppState.useBlur,
                             )
 
-                            TAB_WEB -> MaterialWebScreen(
+                            TAB_LIST -> MaterialListScreen(
                                 outerPadding = outerPadding,
                                 useBlur = AppState.useBlur,
                             )
 
-                            TAB_TERMINAL -> MaterialTerminalScreen(
+                            TAB_GALLERY -> MaterialGalleryScreen(
                                 outerPadding = outerPadding,
                                 useBlur = AppState.useBlur,
+                                onNotify = notify,
                             )
 
-                            TAB_ABOUT -> MaterialAboutScreen(
+                            TAB_SETTINGS -> MaterialSettingsScreen(
                                 outerPadding = outerPadding,
                                 useBlur = AppState.useBlur,
                                 themeMode = themeMode,
                                 onThemeModeChange = onThemeModeChange,
                                 dynamicColor = dynamicColor,
                                 onDynamicColorChange = onDynamicColorChange,
+                                useBlurEnabled = AppState.useBlur,
+                                onUseBlurChange = {
+                                    AppState.useBlur = it
+                                    UiEnginePrefs.saveUseBlur(context, it)
+                                },
+                                engine = AppState.engine,
+                                onEngineChange = {
+                                    AppState.engine = it
+                                    UiEnginePrefs.save(context, it)
+                                },
+                                onOpenAbout = { subPage = MaterialSubPage.About },
                                 onOpenLicenses = { subPage = MaterialSubPage.Licenses },
-                                onNotify = notify,
                             )
                         }
                     }
                 }
             },
             subPage = { closeSubPage ->
+                LaunchedEffect(subPage) {
+                    CrashHandler.note("二级页面 ${subPage?.title ?: ""}")
+                }
                 when (subPage) {
+                    MaterialSubPage.About -> MaterialAboutScreen(
+                        onBack = closeSubPage,
+                        useBlur = AppState.useBlur,
+                        onOpenLicenses = { subPage = MaterialSubPage.Licenses },
+                        onNotify = notify,
+                    )
+
                     MaterialSubPage.Licenses -> MaterialLicensesScreen(
                         onBack = closeSubPage,
                         useBlur = AppState.useBlur,
@@ -200,8 +230,7 @@ private fun MaterialShell(
         )
 
         // The host lives here, not inside the tab Scaffold: a second-level page is drawn over that
-        // Scaffold, so a message posted from one used to appear behind it. From the root it sits on
-        // top of everything, the way a toast would.
+        // Scaffold, so a message posted from one would otherwise appear behind it.
         SwipeableSnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier

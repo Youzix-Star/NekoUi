@@ -31,11 +31,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import top.youzix.neko.demo.Home
-import top.youzix.neko.demo.Overview
 import top.youzix.neko.demo.InfoRow
+import top.youzix.neko.demo.Overview
 import top.youzix.neko.demo.Stat
 import top.youzix.neko.demo.Tone
 import top.youzix.neko.demo.demoHome
+import top.youzix.neko.ui.miuix.components.StatusTag
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
@@ -108,7 +109,8 @@ private fun OverviewRow(entry: Overview) {
 
 /**
  * The main block: a panel coloured by state, with the icon of what it is describing as a large
- * faint watermark. Padding is explicit (20dp) because a miuix `Card` has none of its own.
+ * faint watermark, and the state tags along the bottom. Padding is explicit (20dp) because a
+ * miuix `Card` has none of its own.
  */
 @Composable
 private fun StatusCard(home: Home) {
@@ -149,6 +151,18 @@ private fun StatusCard(home: Home) {
                         .padding(top = 8.dp)
                         .alpha(0.75f),
                 )
+                Row(
+                    modifier = Modifier.padding(top = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    home.tags.forEach { tag ->
+                        StatusTag(
+                            label = tag.label,
+                            backgroundColor = content.copy(alpha = 0.12f),
+                            contentColor = content,
+                        )
+                    }
+                }
             }
         }
     }
@@ -221,6 +235,6 @@ private fun colorsFor(tone: Tone): Pair<Color, Color> = when (tone) {
     Tone.OK -> MiuixTheme.colorScheme.primaryContainer to MiuixTheme.colorScheme.onPrimaryContainer
     Tone.WARN, Tone.BAD ->
         MiuixTheme.colorScheme.errorContainer to MiuixTheme.colorScheme.onErrorContainer
-    Tone.BUSY, Tone.IDLE ->
+    Tone.BUSY, Tone.IDLE, Tone.ACCENT ->
         MiuixTheme.colorScheme.surfaceContainerHigh to MiuixTheme.colorScheme.onSurfaceContainerHigh
 }

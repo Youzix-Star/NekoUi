@@ -13,7 +13,7 @@ import top.youzix.neko.BuildConfig
 import top.youzix.neko.ui.AppIcons
 
 /** How a block on the home page is coloured. */
-enum class Tone { OK, WARN, BAD, BUSY, IDLE }
+enum class Tone { OK, WARN, BAD, BUSY, IDLE, ACCENT }
 
 /** The main status block: one headline, one sentence of detail, one line of hint. */
 data class Status(
@@ -22,6 +22,9 @@ data class Status(
     val detail: String,
     val hint: String,
 )
+
+/** A tag shown inside the status block. */
+data class Tag(val label: String, val tone: Tone)
 
 /** A one-line card under the status block. */
 data class InfoRow(
@@ -53,6 +56,7 @@ data class Overview(
 data class Home(
     val icon: ImageVector,
     val status: Status,
+    val tags: List<Tag>,
     val rows: List<InfoRow>,
     val stats: List<Stat>,
     val overview: List<Overview>,
@@ -65,22 +69,27 @@ fun demoHome(): Home = Home(
     status = Status(
         tone = Tone.OK,
         headline = "界面外壳",
-        detail = "四个页签、两套引擎、液态玻璃底栏与预见式返回都在，背后没有任何业务逻辑。",
-        hint = "在「关于」里切换引擎、主题与返回动画。",
+        detail = "页面骨架、两套引擎、崩溃兜底都在；背后没有业务逻辑。",
+        hint = "在「设置」里切换引擎、主题与返回动画。",
+    ),
+    tags = listOf(
+        Tag("双引擎", Tone.ACCENT),
+        Tag("已签名", Tone.OK),
+        Tag("v${BuildConfig.VERSION_NAME}", Tone.IDLE),
     ),
     rows = listOf(
         InfoRow(
             id = "engine",
             title = "界面引擎",
             summary = AppState.engine.label,
-            hint = "关于 → 引擎",
+            hint = "设置 → 引擎",
             active = true,
             icon = AppIcons.Tune,
         ),
         InfoRow(
             id = "demo",
             title = "演示数据",
-            summary = "首页、网页与终端都是占位内容",
+            summary = "四个页签都是占位内容",
             hint = "无副作用",
             active = true,
             icon = AppIcons.Grant,
@@ -89,13 +98,12 @@ fun demoHome(): Home = Home(
     stats = listOf(
         Stat("页签", "4"),
         Stat("引擎", "2"),
-        Stat("版本", BuildConfig.VERSION_NAME),
+        Stat("控件", "24"),
     ),
     overview = listOf(
         Overview("应用版本", BuildConfig.VERSION_NAME, AppIcons.About),
         Overview("系统版本", "Android ${Build.VERSION.RELEASE}", AppIcons.Phones),
         Overview("界面引擎", AppState.engine.label, AppIcons.Tune),
-        Overview("网页视图", "未接入", AppIcons.Web),
-        Overview("终端", "演示", AppIcons.Terminal),
+        Overview("崩溃处理", "独立进程崩溃页", AppIcons.Debug),
     ),
 )

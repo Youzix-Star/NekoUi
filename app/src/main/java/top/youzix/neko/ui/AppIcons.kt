@@ -13,7 +13,10 @@ import androidx.compose.material.icons.rounded.BugReport
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.Description
+import androidx.compose.material.icons.automirrored.rounded.List
 import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Widgets
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -21,9 +24,7 @@ import androidx.compose.material.icons.rounded.Stop
 import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.PhoneAndroid
-import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material.icons.rounded.Refresh
-import androidx.compose.material.icons.rounded.Terminal
 import androidx.compose.ui.graphics.vector.ImageVector
 
 /**
@@ -41,8 +42,9 @@ const val AppIconText = "ᔦ ° ꒳ ° ᔨ ̖́-"
 object AppIcons {
     // The four tabs.
     val Home: ImageVector = Icons.Rounded.Home
-    val Web: ImageVector = Icons.Rounded.Public
-    val Terminal: ImageVector = Icons.Rounded.Terminal
+    val List: ImageVector = Icons.AutoMirrored.Rounded.List
+    val Gallery: ImageVector = Icons.Rounded.Widgets
+    val Settings: ImageVector = Icons.Rounded.Settings
     val About: ImageVector = Icons.Rounded.Info
 
     val SourceCode: ImageVector = Icons.Rounded.Code

@@ -32,64 +32,44 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
-import top.youzix.neko.AppState
 import top.youzix.neko.BuildConfig
+import top.youzix.neko.crash.CrashHandler
 import top.youzix.neko.ui.AppIcons
 import top.youzix.neko.ui.AppMark
-import top.youzix.neko.ui.UiEngine
-import top.youzix.neko.ui.UiEnginePrefs
-import top.youzix.neko.ui.miuix.ThemeModeOptions
-import top.youzix.neko.ui.predictiveback.PredictiveBackStyle
 import top.youzix.neko.util.DeviceInfo
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.preference.SwitchPreference
-import top.yukonga.miuix.kmp.preference.WindowSpinnerPreference
-import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 
 private const val REPOSITORY_URL = "https://github.com/Youzix-Star/NekoUi"
 
 /**
- * 关于 — the settings page and the about page in one.
+ * 关于 — the identity page: what this build is, where it comes from, and what it wrote down when
+ * it died.
  *
- * Everything that configures the shell (appearance, engine) sits above everything that only
- * describes it, because this is the only place either of them can live.
+ * The crash report is the reason this page exists at all: a report nobody can reach is the same as
+ * no report, so the file is listed, viewable, copyable and clearable from here.
  */
 @Composable
 fun AboutScreen(
     contentPadding: PaddingValues,
     scrollBehavior: ScrollBehavior,
-    colorSchemeMode: ColorSchemeMode,
-    onColorSchemeModeChange: (ColorSchemeMode) -> Unit,
-    useLiquidGlass: Boolean,
-    onUseLiquidGlassChange: (Boolean) -> Unit,
-    engine: UiEngine,
-    onEngineChange: (UiEngine) -> Unit,
     onOpenLicenses: () -> Unit,
     onNotify: (String) -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
     val clipboard = LocalClipboardManager.current
     val context = LocalContext.current
-    // Held as the string itself: null means there is nothing to show, so the dialog needs no
-    // second Boolean to say whether it is open.
+    var crashLog by remember { mutableStateOf(CrashHandler.read(context)) }
+    var showCrash by remember { mutableStateOf(false) }
     var deviceInfo by remember { mutableStateOf<String?>(null) }
-
-    val themeItems = remember { ThemeModeOptions.map { DropdownItem(text = it.second) } }
-    val engineItems = remember { UiEngine.entries.map { DropdownItem(text = it.label) } }
-    val backStyleItems = remember { PredictiveBackStyle.entries.map { DropdownItem(text = it.label) } }
-    val selectedThemeIndex = ThemeModeOptions
-        .indexOfFirst { it.first == colorSchemeMode }
-        .coerceAtLeast(0)
 
     LazyColumn(
         modifier = Modifier
@@ -103,58 +83,6 @@ fun AboutScreen(
             AppHeader()
         }
 
-        item(key = "appearance") {
-            Column {
-                SmallTitle(text = "外观")
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    WindowSpinnerPreference(
-                        title = "主题模式",
-                        items = themeItems,
-                        selectedIndex = selectedThemeIndex,
-                        onSelectedIndexChange = { index ->
-                            ThemeModeOptions.getOrNull(index)?.let { onColorSchemeModeChange(it.first) }
-                        },
-                    )
-                    WindowSpinnerPreference(
-                        title = "预见式返回动画",
-                        summary = "二级页面的返回跟手动画",
-                        items = backStyleItems,
-                        selectedIndex = PredictiveBackStyle.entries
-                            .indexOf(AppState.predictiveBackStyle).coerceAtLeast(0),
-                        onSelectedIndexChange = { index ->
-                            PredictiveBackStyle.entries.getOrNull(index)?.let {
-                                AppState.predictiveBackStyle = it
-                                UiEnginePrefs.savePredictiveBackStyle(context, it)
-                            }
-                        },
-                    )
-                    SwitchPreference(
-                        title = "液态玻璃底栏",
-                        summary = "底栏实时模糊与高光",
-                        checked = useLiquidGlass,
-                        onCheckedChange = onUseLiquidGlassChange,
-                    )
-                }
-            }
-        }
-
-        item(key = "engine") {
-            Column {
-                SmallTitle(text = "引擎")
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    WindowSpinnerPreference(
-                        title = "界面引擎",
-                        summary = "切换整套界面实现",
-                        items = engineItems,
-                        selectedIndex = UiEngine.entries.indexOf(engine).coerceAtLeast(0),
-                        onSelectedIndexChange = { index ->
-                            UiEngine.entries.getOrNull(index)?.let(onEngineChange)
-                        },
-                    )
-                }
-            }
-        }
-
         item(key = "about") {
             Column {
                 SmallTitle(text = "关于")
@@ -163,11 +91,7 @@ fun AboutScreen(
                         title = "获取源代码",
                         summary = "GitHub 上的源码",
                         startAction = {
-                            Icon(
-                                imageVector = AppIcons.SourceCode,
-                                contentDescription = null,
-                                modifier = Modifier.size(22.dp),
-                            )
+                            Icon(AppIcons.SourceCode, null, Modifier.size(22.dp))
                         },
                         onClick = { uriHandler.openUri(REPOSITORY_URL) },
                     )
@@ -175,28 +99,90 @@ fun AboutScreen(
                         title = "开源许可",
                         summary = "依赖的许可证",
                         startAction = {
-                            Icon(
-                                imageVector = AppIcons.License,
-                                contentDescription = null,
-                                modifier = Modifier.size(22.dp),
-                            )
+                            Icon(AppIcons.License, null, Modifier.size(22.dp))
                         },
                         onClick = onOpenLicenses,
+                    )
+                    ArrowPreference(
+                        title = "崩溃日志",
+                        summary = if (crashLog.isNullOrBlank()) "没有记录" else "有一条记录，点按查看",
+                        startAction = {
+                            Icon(AppIcons.Debug, null, Modifier.size(22.dp))
+                        },
+                        onClick = {
+                            crashLog = CrashHandler.read(context)
+                            showCrash = true
+                        },
                     )
                     ArrowPreference(
                         title = "设备信息",
                         summary = "机型、系统与显示",
                         startAction = {
-                            Icon(
-                                imageVector = AppIcons.Phones,
-                                contentDescription = null,
-                                modifier = Modifier.size(22.dp),
-                            )
+                            Icon(AppIcons.Phones, null, Modifier.size(22.dp))
                         },
-                        // Read on tap, not in composition: the snapshot time is only useful if it
-                        // is the time of the snapshot.
                         onClick = { deviceInfo = DeviceInfo.snapshot(context) },
                     )
+                }
+            }
+        }
+
+        item(key = "footer") {
+            Text(
+                text = "AGPL-3.0 · 界面参考 SukiSU-Ultra 与 NekoPlus",
+                style = MiuixTheme.textStyles.footnote2,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            )
+        }
+    }
+
+    if (showCrash) {
+        val report = crashLog
+        OverlayDialog(
+            show = true,
+            title = "崩溃日志",
+            summary = runCatching { CrashHandler.file(context).absolutePath }.getOrDefault("?"),
+            onDismissRequest = { showCrash = false },
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (report.isNullOrBlank()) {
+                    Text("没有崩溃记录。", style = MiuixTheme.textStyles.body2)
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 360.dp)
+                            .verticalScroll(rememberScrollState()),
+                    ) {
+                        Text(
+                            text = report,
+                            style = MiuixTheme.textStyles.footnote2,
+                            fontFamily = FontFamily.Monospace,
+                        )
+                    }
+                    Button(
+                        onClick = {
+                            clipboard.setText(AnnotatedString(report))
+                            onNotify("已复制崩溃日志")
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text("复制")
+                    }
+                    Button(
+                        onClick = {
+                            CrashHandler.clear(context)
+                            crashLog = null
+                            showCrash = false
+                            onNotify("已清空")
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text("清空")
+                    }
+                }
+                Button(onClick = { showCrash = false }, modifier = Modifier.fillMaxWidth()) {
+                    Text("关闭")
                 }
             }
         }

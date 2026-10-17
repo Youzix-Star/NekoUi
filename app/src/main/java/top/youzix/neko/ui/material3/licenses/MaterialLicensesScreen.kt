@@ -57,6 +57,11 @@ fun MaterialLicensesScreen(onBack: () -> Unit, useBlur: Boolean) {
                 "AGPL-3.0",
                 "https://github.com/Youzix-Star/NekoPlus",
             ),
+            LicenseEntry(
+                "SukiSU-Ultra（界面参考，GPL-3.0）",
+                "GPL-3.0",
+                "https://github.com/SukiSU-Ultra/SukiSU-Ultra",
+            ),
             LicenseEntry("miuix", "Apache License 2.0", "https://github.com/compose-miuix-ui/miuix"),
             LicenseEntry(
                 "AndroidX / Jetpack Compose",

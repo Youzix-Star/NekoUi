@@ -22,13 +22,17 @@ import androidx.compose.foundation.layout.plus
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.LargeFlexibleTopAppBar
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -44,64 +48,58 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
-import top.youzix.neko.AppState
 import top.youzix.neko.BuildConfig
+import top.youzix.neko.crash.CrashHandler
 import top.youzix.neko.ui.AppIcons
 import top.youzix.neko.ui.AppMark
-import top.youzix.neko.ui.UiEngine
-import top.youzix.neko.ui.UiEnginePrefs
-import top.youzix.neko.ui.material3.ThemeMode
+import top.youzix.neko.util.DeviceInfo
 import top.youzix.neko.ui.material3.material3AppBarColor
 import top.youzix.neko.ui.material3.material3BlurEffect
 import top.youzix.neko.ui.material3.rememberMaterial3BlurBackdrop
-import top.youzix.neko.ui.material3.widgets.DropDownMenuWidget
 import top.youzix.neko.ui.material3.widgets.NavigationItemWidget
 import top.youzix.neko.ui.material3.widgets.SegmentedColumn
-import top.youzix.neko.ui.material3.widgets.SwitchWidget
-import top.youzix.neko.ui.predictiveback.PredictiveBackStyle
-import top.youzix.neko.util.DeviceInfo
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 
 private const val REPOSITORY_URL = "https://github.com/Youzix-Star/NekoUi"
 
 /**
- * The merged settings and about page: how the app looks, which engine draws it, and what it is
- * built on.
+ * 关于 — the identity page: what this build is, where it comes from, and what it wrote down when
+ * it died. It is a second-level page, so it carries its own top bar and back arrow.
  */
 @Composable
 fun MaterialAboutScreen(
-    outerPadding: PaddingValues,
+    onBack: () -> Unit,
     useBlur: Boolean,
-    themeMode: ThemeMode,
-    onThemeModeChange: (ThemeMode) -> Unit,
-    dynamicColor: Boolean,
-    onDynamicColorChange: (Boolean) -> Unit,
     onOpenLicenses: () -> Unit,
     onNotify: (String) -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
     val clipboard = LocalClipboardManager.current
     val context = LocalContext.current
-    // Held as the string itself: null means there is nothing to show, so the dialog needs no
-    // second Boolean to say whether it is open.
-    var deviceInfo by remember { mutableStateOf<String?>(null) }
-    // Read above the list, not inside it: the groups are declared by a non-composable DSL lambda,
-    // so a value read down there would not be what brings this page back when it changes.
-    val engine = AppState.engine
-    val predictiveBackStyle = AppState.predictiveBackStyle
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val backdrop = rememberMaterial3BlurBackdrop(useBlur)
+    var crashLog by remember { mutableStateOf(CrashHandler.read(context)) }
+    var showCrash by remember { mutableStateOf(false) }
+    var deviceInfo by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         modifier = Modifier
-            .nestedScroll(scrollBehavior.nestedScrollConnection)
-            .fillMaxSize(),
+            .fillMaxSize()
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
         topBar = {
-            LargeFlexibleTopAppBar(
+            TopAppBar(
                 modifier = Modifier.material3BlurEffect(backdrop),
                 title = { Text("关于", modifier = Modifier.padding(start = 12.dp)) },
                 scrollBehavior = scrollBehavior,
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                            contentDescription = "返回",
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = backdrop.material3AppBarColor(),
                     titleContentColor = MaterialTheme.colorScheme.onBackground,
@@ -114,67 +112,9 @@ fun MaterialAboutScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .then(backdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier),
-            contentPadding = paddingValues + outerPadding,
+            contentPadding = paddingValues + PaddingValues(top = 8.dp, bottom = 24.dp),
         ) {
             item { AppHeader() }
-
-            item {
-                SegmentedColumn(title = "外观") {
-                    item {
-                        DropDownMenuWidget(
-                            title = "主题模式",
-                            choice = ThemeMode.entries.indexOf(themeMode).coerceAtLeast(0),
-                            data = ThemeMode.entries.map { it.label },
-                            onChoiceChange = { index ->
-                                ThemeMode.entries.getOrNull(index)?.let(onThemeModeChange)
-                            },
-                        )
-                    }
-                    item {
-                        SwitchWidget(
-                            title = "动态取色",
-                            description = "跟随壁纸取色",
-                            checked = dynamicColor,
-                            onCheckedChange = onDynamicColorChange,
-                        )
-                    }
-                    item {
-                        DropDownMenuWidget(
-                            icon = AppIcons.Back,
-                            title = "预见式返回动画",
-                            description = "二级页面返回时的跟手动画",
-                            choice = PredictiveBackStyle.entries
-                                .indexOf(predictiveBackStyle).coerceAtLeast(0),
-                            data = PredictiveBackStyle.entries.map { it.label },
-                            onChoiceChange = { index ->
-                                PredictiveBackStyle.entries.getOrNull(index)?.let {
-                                    AppState.predictiveBackStyle = it
-                                    UiEnginePrefs.savePredictiveBackStyle(context, it)
-                                }
-                            },
-                        )
-                    }
-                }
-            }
-
-            item {
-                SegmentedColumn(title = "引擎") {
-                    item {
-                        DropDownMenuWidget(
-                            title = "界面引擎",
-                            description = "切换整套界面实现",
-                            choice = UiEngine.entries.indexOf(engine).coerceAtLeast(0),
-                            data = UiEngine.entries.map { it.label },
-                            onChoiceChange = { index ->
-                                UiEngine.entries.getOrNull(index)?.let {
-                                    AppState.engine = it
-                                    UiEnginePrefs.save(context, it)
-                                }
-                            },
-                        )
-                    }
-                }
-            }
 
             item {
                 SegmentedColumn(title = "关于") {
@@ -195,9 +135,21 @@ fun MaterialAboutScreen(
                         )
                     }
                     item {
-                        // The snapshot is taken at tap time, never during composition: the
-                        // snapshot time inside the text only means something if it is the moment
-                        // the row was pressed. Setting it is also what opens the dialog.
+                        NavigationItemWidget(
+                            icon = AppIcons.Debug,
+                            title = "崩溃日志",
+                            description = if (crashLog.isNullOrBlank()) {
+                                "没有记录"
+                            } else {
+                                "有一条记录，点按查看"
+                            },
+                            onClick = {
+                                crashLog = CrashHandler.read(context)
+                                showCrash = true
+                            },
+                        )
+                    }
+                    item {
                         NavigationItemWidget(
                             icon = AppIcons.Phones,
                             title = "设备信息",
@@ -207,7 +159,66 @@ fun MaterialAboutScreen(
                     }
                 }
             }
+
+            item {
+                Text(
+                    text = "AGPL-3.0 · 界面参考 SukiSU-Ultra 与 NekoPlus",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 28.dp, vertical = 12.dp),
+                )
+            }
         }
+    }
+
+    val report = crashLog
+    if (showCrash) {
+        AlertDialog(
+            onDismissRequest = { showCrash = false },
+            title = { Text("崩溃日志") },
+            text = {
+                if (report.isNullOrBlank()) {
+                    Text("没有崩溃记录。")
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 360.dp)
+                            .verticalScroll(rememberScrollState()),
+                    ) {
+                        Text(
+                            text = report,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = FontFamily.Monospace,
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                if (!report.isNullOrBlank()) {
+                    TextButton(
+                        onClick = {
+                            clipboard.setText(AnnotatedString(report))
+                            onNotify("已复制崩溃日志")
+                        },
+                    ) { Text("复制") }
+                }
+            },
+            dismissButton = {
+                if (report.isNullOrBlank()) {
+                    TextButton(onClick = { showCrash = false }) { Text("关闭") }
+                } else {
+                    TextButton(
+                        onClick = {
+                            CrashHandler.clear(context)
+                            crashLog = null
+                            showCrash = false
+                            onNotify("已清空")
+                        },
+                    ) { Text("清空") }
+                }
+            },
+        )
     }
 
     val info = deviceInfo
@@ -236,9 +247,7 @@ fun MaterialAboutScreen(
                         onNotify("已复制设备信息")
                         deviceInfo = null
                     },
-                ) {
-                    Text("复制")
-                }
+                ) { Text("复制") }
             },
             dismissButton = {
                 TextButton(onClick = { deviceInfo = null }) { Text("关闭") }
@@ -255,8 +264,6 @@ private fun AppHeader() {
             .padding(top = 8.dp, bottom = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // The app mark. Its size is left to the design language's own, so it stays a mark and not
-        // a banner; the column centres it.
         AppMark(
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(vertical = 6.dp),
