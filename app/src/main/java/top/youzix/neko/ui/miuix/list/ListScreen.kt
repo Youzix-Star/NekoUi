@@ -2,22 +2,30 @@
  * Copyright 2026, Youzix-Star
  * SPDX-License-Identifier: AGPL-3.0-only
  *
- * The page follows SukiSU-Ultra's SuperUserMiuix.kt (GPL-3.0): the granted/total summary, the
- * search bar, the pull-to-refresh body and one card of rows.
+ * The page is SukiSU-Ultra's SuperUserMiuix.kt (GPL-3.0): a `SearchStatus` that animates the top
+ * bar away, a fake search field in the bar, the expanded search pager, and a pull-to-refresh list.
  */
 
 package top.youzix.neko.ui.miuix.list
 
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.add
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,7 +33,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -33,94 +46,130 @@ import top.youzix.neko.demo.AppEntry
 import top.youzix.neko.demo.ListDemo
 import top.youzix.neko.demo.ListFilter
 import top.youzix.neko.demo.TagTone
-import top.youzix.neko.ui.miuix.components.SearchField
+import top.youzix.neko.ui.miuix.components.BlurredBar
+import top.youzix.neko.ui.miuix.components.SearchBarFake
+import top.youzix.neko.ui.miuix.components.SearchBox
+import top.youzix.neko.ui.miuix.components.SearchPager
+import top.youzix.neko.ui.miuix.components.SearchStatus
 import top.youzix.neko.ui.miuix.components.StatusTag
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.PullToRefresh
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
+import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
- * 列表 — a searchable superuser-style list with pull-to-refresh.
+ * 列表 — a superuser-shaped list with SukiSU's expanding search.
  */
 @Composable
-fun ListScreen(
-    contentPadding: PaddingValues,
-    scrollBehavior: ScrollBehavior,
-) {
-    var query by remember { mutableStateOf("") }
+fun ListScreen(bottomPadding: Dp) {
+    var searchStatus by remember { mutableStateOf(SearchStatus(label = "搜索应用")) }
     var filter by remember { mutableStateOf(ListFilter.All) }
     var selected by remember { mutableStateOf<AppEntry?>(null) }
     var isRefreshing by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    val entries = ListDemo.filter(query, filter)
+    val density = LocalDensity.current
+    val scrollBehavior = MiuixScrollBehavior()
+    val entries = ListDemo.filter(searchStatus.searchText, filter)
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(contentPadding),
-    ) {
-        // Pinned above the list, like SukiSU's search bar in the top bar.
-        SearchField(
-            text = query,
-            onTextChange = { query = it },
-            label = "搜索应用",
-            modifier = Modifier.padding(horizontal = 4.dp),
-        )
-
-        PullToRefresh(
-            isRefreshing = isRefreshing,
-            onRefresh = {
-                if (!isRefreshing) {
-                    isRefreshing = true
-                    scope.launch {
-                        delay(700)
-                        isRefreshing = false
-                    }
-                }
-            },
-            modifier = Modifier
-                .fillMaxSize()
-                .weight(1f)
-                .nestedScroll(scrollBehavior.nestedScrollConnection),
-            topAppBarScrollBehavior = scrollBehavior,
-        ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(top = 12.dp, bottom = 12.dp),
-            ) {
-                item(key = "header") {
-                    ListHeader(
-                        granted = ListDemo.granted,
-                        total = ListDemo.total,
-                        filter = filter,
-                        onFilterChange = { filter = it },
+    Scaffold(
+        topBar = {
+            BlurredBar(backdrop = null) {
+                searchStatus.TopAppBarAnim {
+                    TopAppBar(
+                        title = "列表",
+                        scrollBehavior = scrollBehavior,
+                        bottomContent = {
+                            Box(
+                                modifier = Modifier
+                                    .alpha(if (searchStatus.isCollapsed()) 1f else 0f)
+                                    .onGloballyPositioned { coordinates ->
+                                        with(density) {
+                                            val offset = coordinates.positionInWindow().y.toDp()
+                                            if (searchStatus.offsetY != offset) {
+                                                searchStatus = searchStatus.copy(offsetY = offset)
+                                            }
+                                        }
+                                    }
+                                    .then(
+                                        if (searchStatus.isCollapsed()) {
+                                            Modifier.pointerInput(Unit) {
+                                                detectTapGestures {
+                                                    searchStatus = searchStatus.copy(
+                                                        current = SearchStatus.Status.EXPANDING,
+                                                    )
+                                                }
+                                            }
+                                        } else {
+                                            Modifier
+                                        },
+                                    ),
+                            ) {
+                                SearchBarFake(searchStatus.label, 12.dp)
+                            }
+                        },
                     )
                 }
-
-                item(key = "apps") {
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        entries.forEach { app ->
-                            BasicComponent(
-                                title = app.name,
-                                summary = app.packageName,
-                                onClick = { selected = app },
-                                endActions = {
-                                    val (background, content) = tagColors(app.tone)
-                                    StatusTag(
-                                        label = app.note,
-                                        backgroundColor = background,
-                                        contentColor = content,
-                                    )
-                                },
-                            )
+            }
+        },
+        popupHost = {
+            searchStatus.SearchPager(
+                onSearchStatusChange = { searchStatus = it },
+                defaultResult = {
+                    SearchResults(entries = entries, onSelect = { selected = it })
+                },
+                result = {
+                    SearchResults(entries = entries, onSelect = { selected = it })
+                },
+            )
+        },
+        contentWindowInsets = WindowInsets.systemBars
+            .add(WindowInsets.displayCutout)
+            .only(WindowInsetsSides.Horizontal),
+    ) { innerPadding ->
+        searchStatus.SearchBox {
+            PullToRefresh(
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    if (!isRefreshing) {
+                        isRefreshing = true
+                        scope.launch {
+                            delay(700)
+                            isRefreshing = false
                         }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection),
+                topAppBarScrollBehavior = scrollBehavior,
+            ) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        start = 12.dp,
+                        end = 12.dp,
+                        top = innerPadding.calculateTopPadding() + 6.dp,
+                        bottom = innerPadding.calculateBottomPadding() + bottomPadding,
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    item(key = "header") {
+                        ListHeader(
+                            granted = ListDemo.granted,
+                            total = ListDemo.total,
+                            filter = filter,
+                            onFilterChange = { filter = it },
+                        )
+                    }
+                    item(key = "apps") {
+                        AppCard(entries = entries, onSelect = { selected = it })
                     }
                 }
             }
@@ -143,7 +192,35 @@ fun ListScreen(
     }
 }
 
-/** The granted/total summary and the filters. */
+@Composable
+private fun SearchResults(entries: List<AppEntry>, onSelect: (AppEntry) -> Unit) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
+    ) {
+        item(key = "apps") {
+            AppCard(entries = entries, onSelect = onSelect)
+        }
+    }
+}
+
+@Composable
+private fun AppCard(entries: List<AppEntry>, onSelect: (AppEntry) -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        entries.forEach { app ->
+            BasicComponent(
+                title = app.name,
+                summary = app.packageName,
+                onClick = { onSelect(app) },
+                endActions = {
+                    val (background, content) = tagColors(app.tone)
+                    StatusTag(label = app.note, backgroundColor = background, contentColor = content)
+                },
+            )
+        }
+    }
+}
+
 @Composable
 private fun ListHeader(
     granted: Int,

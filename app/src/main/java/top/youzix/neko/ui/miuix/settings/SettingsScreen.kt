@@ -35,9 +35,55 @@ import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.add
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.ui.unit.Dp
+import top.youzix.neko.ui.miuix.components.BlurredBar
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.TopAppBar
 
 @Composable
 fun SettingsScreen(
+    bottomPadding: Dp,
+    engine: UiEngine,
+    onEngineChange: (UiEngine) -> Unit,
+    onOpenAbout: () -> Unit,
+    onOpenLicenses: () -> Unit,
+) {
+    val scrollBehavior = MiuixScrollBehavior()
+    Scaffold(
+        topBar = {
+            BlurredBar(backdrop = null) {
+                TopAppBar(title = "设置", scrollBehavior = scrollBehavior)
+            }
+        },
+        contentWindowInsets = WindowInsets.systemBars
+            .add(WindowInsets.displayCutout)
+            .only(WindowInsetsSides.Horizontal),
+    ) { innerPadding ->
+        SettingsContent(
+            contentPadding = PaddingValues(
+                start = 12.dp,
+                end = 12.dp,
+                top = innerPadding.calculateTopPadding(),
+                bottom = innerPadding.calculateBottomPadding() + bottomPadding,
+            ),
+            scrollBehavior = scrollBehavior,
+            engine = engine,
+            onEngineChange = onEngineChange,
+            onOpenAbout = onOpenAbout,
+            onOpenLicenses = onOpenLicenses,
+        )
+    }
+}
+
+@Composable
+private fun SettingsContent(
     contentPadding: PaddingValues,
     scrollBehavior: ScrollBehavior,
     engine: UiEngine,

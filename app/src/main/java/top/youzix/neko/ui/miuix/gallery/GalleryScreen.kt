@@ -47,6 +47,17 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.add
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.ui.unit.Dp
+import top.youzix.neko.ui.miuix.components.BlurredBar
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.TopAppBar
 
 /**
  * 组件 — every control the shell offers, on one page.
@@ -55,7 +66,32 @@ import top.yukonga.miuix.kmp.utils.overScrollVertical
  * it needs is here, it should be reused rather than rebuilt.
  */
 @Composable
-fun GalleryScreen(
+fun GalleryScreen(bottomPadding: Dp) {
+    val scrollBehavior = MiuixScrollBehavior()
+    Scaffold(
+        topBar = {
+            BlurredBar(backdrop = null) {
+                TopAppBar(title = "组件", scrollBehavior = scrollBehavior)
+            }
+        },
+        contentWindowInsets = WindowInsets.systemBars
+            .add(WindowInsets.displayCutout)
+            .only(WindowInsetsSides.Horizontal),
+    ) { innerPadding ->
+        GalleryContent(
+            contentPadding = PaddingValues(
+                start = 12.dp,
+                end = 12.dp,
+                top = innerPadding.calculateTopPadding(),
+                bottom = innerPadding.calculateBottomPadding() + bottomPadding,
+            ),
+            scrollBehavior = scrollBehavior,
+        )
+    }
+}
+
+@Composable
+private fun GalleryContent(
     contentPadding: PaddingValues,
     scrollBehavior: ScrollBehavior,
 ) {

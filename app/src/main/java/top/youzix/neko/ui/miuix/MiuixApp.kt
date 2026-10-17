@@ -10,11 +10,13 @@ package top.youzix.neko.ui.miuix
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.add
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,7 +35,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import top.youzix.neko.AppState
@@ -57,7 +58,6 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.SnackbarHost
 import top.yukonga.miuix.kmp.basic.SnackbarHostState
-import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
@@ -204,16 +204,12 @@ private fun MiuixTabs(
     onOpenLicenses: () -> Unit,
     onTabSelected: (Int) -> Unit,
 ) {
+    // Each page owns its own top bar (SukiSU does the same), so this Scaffold only owns the
+    // bottom bar and the horizontal insets.
     Scaffold(
-        topBar = {
-            TopAppBar(
-                // Follows the requested tab, not the pager, so the title flips together
-                // with the bottom-bar highlight the instant a tab is tapped.
-                title = titles[selectedPage],
-                largeTitle = titles[selectedPage],
-                scrollBehavior = scrollBehavior,
-            )
-        },
+        contentWindowInsets = WindowInsets.systemBars
+            .add(WindowInsets.displayCutout)
+            .only(WindowInsetsSides.Horizontal),
         bottomBar = {
             // The bar belongs to the bottom edge of the screen, keyboard or no keyboard: it
             // consumes the IME inset here so that nothing above it can lift it out of place.
@@ -240,13 +236,7 @@ private fun MiuixTabs(
             }
         },
     ) { innerPadding ->
-        val layoutDirection = LocalLayoutDirection.current
-        val pagePadding = PaddingValues(
-            start = innerPadding.calculateStartPadding(layoutDirection) + 12.dp,
-            top = innerPadding.calculateTopPadding() + 12.dp,
-            end = innerPadding.calculateEndPadding(layoutDirection) + 12.dp,
-            bottom = innerPadding.calculateBottomPadding() + 12.dp,
-        )
+        val bottomPadding = innerPadding.calculateBottomPadding() + 12.dp
 
         Box(
             modifier = Modifier
@@ -261,8 +251,7 @@ private fun MiuixTabs(
             ) { page ->
                 when (page) {
                     TAB_HOME -> HomeScreen(
-                        contentPadding = pagePadding,
-                        scrollBehavior = scrollBehavior,
+                        bottomPadding = bottomPadding,
                         onOpenLink = { target ->
                             when (target) {
                                 HomeTarget.Gallery -> onTabSelected(TAB_GALLERY)
@@ -271,19 +260,12 @@ private fun MiuixTabs(
                         },
                     )
 
-                    TAB_LIST -> ListScreen(
-                        contentPadding = pagePadding,
-                        scrollBehavior = scrollBehavior,
-                    )
+                    TAB_LIST -> ListScreen(bottomPadding = bottomPadding)
 
-                    TAB_GALLERY -> GalleryScreen(
-                        contentPadding = pagePadding,
-                        scrollBehavior = scrollBehavior,
-                    )
+                    TAB_GALLERY -> GalleryScreen(bottomPadding = bottomPadding)
 
                     else -> SettingsScreen(
-                        contentPadding = pagePadding,
-                        scrollBehavior = scrollBehavior,
+                        bottomPadding = bottomPadding,
                         engine = engine,
                         onEngineChange = onEngineChange,
                         onOpenAbout = onOpenAbout,

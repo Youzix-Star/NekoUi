@@ -109,6 +109,9 @@ dependencies {
     // SukiSU's navigation stack: NavDisplay owns the second-level pages and the platform
     // predictive-back gesture, so there is no hand-written back animation here.
     implementation(libs.miuix.nav)
+    // The miuix search icon set and the back-event bridge, both used by SukiSU's search bar.
+    implementation(libs.miuix.icons)
+    implementation(libs.androidx.navigationevent.compose)
 
     implementation(libs.androidx.activity.compose)
 

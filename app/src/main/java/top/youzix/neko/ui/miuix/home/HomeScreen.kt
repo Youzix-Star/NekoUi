@@ -52,12 +52,52 @@ import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.add
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.ui.unit.Dp
+import top.youzix.neko.ui.miuix.components.BlurredBar
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.TopAppBar
 
 /**
  * 首页 — the shell's front page.
  */
 @Composable
 fun HomeScreen(
+    bottomPadding: Dp,
+    onOpenLink: (HomeTarget) -> Unit,
+) {
+    val scrollBehavior = MiuixScrollBehavior()
+    Scaffold(
+        topBar = {
+            BlurredBar(backdrop = null) {
+                TopAppBar(title = "NekoUi", scrollBehavior = scrollBehavior)
+            }
+        },
+        contentWindowInsets = WindowInsets.systemBars
+            .add(WindowInsets.displayCutout)
+            .only(WindowInsetsSides.Horizontal),
+    ) { innerPadding ->
+        HomeContent(
+            contentPadding = PaddingValues(
+                start = 12.dp,
+                end = 12.dp,
+                top = innerPadding.calculateTopPadding(),
+                bottom = innerPadding.calculateBottomPadding() + bottomPadding,
+            ),
+            scrollBehavior = scrollBehavior,
+            onOpenLink = onOpenLink,
+        )
+    }
+}
+
+@Composable
+private fun HomeContent(
     contentPadding: PaddingValues,
     scrollBehavior: ScrollBehavior,
     onOpenLink: (HomeTarget) -> Unit,

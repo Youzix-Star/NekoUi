@@ -7,6 +7,7 @@ miuix = "0.9.4"
 # material-icons-extended is frozen upstream at 1.7.8; R8 strips what is unused.
 materialIcons = "1.7.8"
 activityCompose = "1.13.0"
+navigationevent = "1.1.2"
 # Pinned: LargeFlexibleTopAppBar, the public *Emphasized typography and ListItemDefaults
 # .segmentedColors/.segmentedShapes (used by the ported SegmentedList) need this alpha.
 # The Compose BOM does not carry material3 yet in the version this project resolves.
@@ -26,6 +27,8 @@ miuix-ui = { module = "top.yukonga.miuix.kmp:miuix-ui-android", version.ref = "m
 miuix-preference = { module = "top.yukonga.miuix.kmp:miuix-preference-android", version.ref = "miuix" }
 miuix-blur = { module = "top.yukonga.miuix.kmp:miuix-blur-android", version.ref = "miuix" }
 miuix-nav = { module = "top.yukonga.miuix.kmp:miuix-nav-android", version.ref = "miuix" }
+miuix-icons = { module = "top.yukonga.miuix.kmp:miuix-icons-android", version.ref = "miuix" }
+androidx-navigationevent-compose = { module = "androidx.navigationevent:navigationevent-compose", version.ref = "navigationevent" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
