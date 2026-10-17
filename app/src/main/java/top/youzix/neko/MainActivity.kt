@@ -28,6 +28,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         AppState.engine = UiEnginePrefs.load(this)
         AppState.useBlur = UiEnginePrefs.loadUseBlur(this)
+        AppState.colorMode = UiEnginePrefs.loadColorMode(this)
+        AppState.keyColor = UiEnginePrefs.loadKeyColor(this)
+        AppState.paletteStyle = UiEnginePrefs.loadPaletteStyle(this)
+        AppState.colorSpec = UiEnginePrefs.loadColorSpec(this)
         AppState.debugMode = UiEnginePrefs.loadDebugMode(this)
         setContent {
             when (AppState.engine) {

@@ -2,16 +2,19 @@
  * Copyright 2026, Youzix-Star
  * SPDX-License-Identifier: AGPL-3.0-only
  *
- * The page follows SukiSU-Ultra's SuperUserMaterial.kt (GPL-3.0): a search app bar that expands to
- * a full-screen search, a pull-to-refresh body, and segmented rows. The search field is SukiSU's
- * `SearchAppBar`, not a plain text field.
+ * The page follows SukiSU-Ultra's SuperUserMaterial.kt (GPL-3.0): the granted/total summary, the
+ * filter chips, the search app bar, the pull-to-refresh body and segmented rows.
  */
 
 @file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 
 package top.youzix.neko.ui.material3.list
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,8 +23,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -39,14 +46,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import top.youzix.neko.demo.AppEntry
 import top.youzix.neko.demo.ListDemo
-import top.youzix.neko.demo.ListGroup
-import top.youzix.neko.demo.ListItem
+import top.youzix.neko.demo.ListFilter
 import top.youzix.neko.demo.TagTone
 import top.youzix.neko.ui.material3.components.ExpressiveScaffold
 import top.youzix.neko.ui.material3.components.SearchAppBar
@@ -55,11 +64,11 @@ import top.youzix.neko.ui.material3.components.SegmentedListItem
 import top.youzix.neko.ui.material3.components.StatusTag
 
 /**
- * 列表 — a searchable, grouped list with pull-to-refresh.
+ * 列表 — a searchable superuser-style list with pull-to-refresh.
  */
 @Composable
 fun MaterialListScreen(
-    outerPadding: androidx.compose.foundation.layout.PaddingValues,
+    outerPadding: PaddingValues,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val listState = rememberLazyListState()
@@ -68,9 +77,10 @@ fun MaterialListScreen(
     val pullState = rememberPullToRefreshState()
 
     var query by remember { mutableStateOf("") }
-    var selected by remember { mutableStateOf<ListItem?>(null) }
+    var filter by remember { mutableStateOf(ListFilter.All) }
+    var selected by remember { mutableStateOf<AppEntry?>(null) }
     var isRefreshing by remember { mutableStateOf(false) }
-    val groups = ListDemo.search(query)
+    val entries = ListDemo.filter(query, filter)
 
     ExpressiveScaffold(
         modifier = Modifier
@@ -85,10 +95,18 @@ fun MaterialListScreen(
                 snackbarHostState = snackbarHostState,
                 scrollBehavior = scrollBehavior,
                 defaultContent = { bottomPadding, _ ->
-                    SearchResults(groups = groups, bottomPadding = bottomPadding)
+                    SearchResults(
+                        entries = entries,
+                        onSelect = { selected = it },
+                        bottomPadding = bottomPadding,
+                    )
                 },
                 searchContent = { bottomPadding, _ ->
-                    SearchResults(groups = groups, bottomPadding = bottomPadding)
+                    SearchResults(
+                        entries = entries,
+                        onSelect = { selected = it },
+                        bottomPadding = bottomPadding,
+                    )
                 },
             )
         },
@@ -124,90 +142,129 @@ fun MaterialListScreen(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(2.dp),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                contentPadding = PaddingValues(
                     start = 16.dp,
                     end = 16.dp,
+                    top = 8.dp,
                     bottom = 16.dp,
                 ),
             ) {
-                if (groups.isEmpty()) {
-                    item(key = "empty") {
-                        EmptyState(query = query)
-                    }
-                } else {
-                    groups.forEach { group ->
-                        item(key = group.title) {
-                            GroupColumn(group = group, onSelect = { selected = it })
-                        }
-                    }
+                item(key = "header") {
+                    ListHeader(
+                        granted = ListDemo.granted,
+                        total = ListDemo.total,
+                        filter = filter,
+                        onFilterChange = { filter = it },
+                    )
+                }
+                item(key = "apps") {
+                    AppColumn(entries = entries, onSelect = { selected = it })
                 }
             }
         }
     }
 
-    selected?.let { item ->
+    selected?.let { app ->
         AlertDialog(
             onDismissRequest = { selected = null },
-            title = { Text(item.title) },
-            text = { Text(item.detail.ifEmpty { item.summary }) },
+            title = { Text(app.name) },
+            text = { Text("${app.packageName}\n${app.note}") },
             confirmButton = { TextButton(onClick = { selected = null }) { Text("关闭") } },
         )
     }
 }
 
+/** The granted/total summary and the filter chips, exactly where SukiSU puts them. */
+@Composable
+private fun ListHeader(
+    granted: Int,
+    total: Int,
+    filter: ListFilter,
+    onFilterChange: (ListFilter) -> Unit,
+) {
+    val haptic = LocalHapticFeedback.current
+
+    @Composable
+    fun Chip(selected: Boolean, label: String, onClick: () -> Unit) {
+        FilterChip(
+            selected = selected,
+            onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                onClick()
+            },
+            label = { Text(label) },
+            shape = CircleShape,
+            colors = FilterChipDefaults.filterChipColors(
+                selectedContainerColor = MaterialTheme.colorScheme.inverseSurface,
+                selectedLabelColor = MaterialTheme.colorScheme.inverseOnSurface,
+            ),
+        )
+    }
+
+    Column(
+        modifier = Modifier.padding(bottom = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Text(
+            text = "已授权 $granted / $total 个应用",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 4.dp),
+        )
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Chip(filter == ListFilter.All, "全部") { onFilterChange(ListFilter.All) }
+            Chip(filter == ListFilter.Granted, "已授权") { onFilterChange(ListFilter.Granted) }
+            Chip(filter == ListFilter.Denied, "未授权") { onFilterChange(ListFilter.Denied) }
+        }
+    }
+}
+
 /** The rows rendered inside the expanded search, where pull-to-refresh has no place. */
 @Composable
-private fun SearchResults(groups: List<ListGroup>, bottomPadding: Dp) {
+private fun SearchResults(
+    entries: List<AppEntry>,
+    onSelect: (AppEntry) -> Unit,
+    bottomPadding: Dp,
+) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(2.dp),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+        contentPadding = PaddingValues(
             start = 16.dp,
             end = 16.dp,
             bottom = 16.dp + bottomPadding,
         ),
     ) {
-        groups.forEach { group ->
-            item(key = group.title) {
-                GroupColumn(group = group, onSelect = {})
-            }
+        item(key = "apps") {
+            AppColumn(entries = entries, onSelect = onSelect)
         }
     }
 }
 
 @Composable
-private fun GroupColumn(group: ListGroup, onSelect: (ListItem) -> Unit) {
-    SegmentedColumn(title = group.title) {
-        group.items.forEach { item ->
-            item(key = item.id) {
+private fun AppColumn(entries: List<AppEntry>, onSelect: (AppEntry) -> Unit) {
+    SegmentedColumn {
+        entries.forEach { app ->
+            item(key = app.id) {
                 SegmentedListItem(
-                    onClick = { onSelect(item) },
-                    headlineContent = { Text(item.title) },
-                    supportingContent = { Text(item.summary) },
+                    onClick = { onSelect(app) },
+                    headlineContent = { Text(app.name) },
+                    supportingContent = { Text(app.packageName) },
                     trailingContent = {
-                        item.tag?.let { tag ->
-                            val (background, content) = tagColors(item.tone)
-                            StatusTag(
-                                label = tag,
-                                backgroundColor = background,
-                                contentColor = content,
-                            )
-                        }
+                        val (background, content) = tagColors(app.tone)
+                        StatusTag(
+                            label = app.note,
+                            backgroundColor = background,
+                            contentColor = content,
+                        )
                     },
                 )
             }
         }
     }
-}
-
-@Composable
-private fun EmptyState(query: String) {
-    Text(
-        text = "没有匹配「$query」的条目",
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(vertical = 24.dp),
-    )
 }
 
 @Composable

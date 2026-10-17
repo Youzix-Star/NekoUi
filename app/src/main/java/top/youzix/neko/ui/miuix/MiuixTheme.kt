@@ -5,12 +5,14 @@
 
 package top.youzix.neko.ui.miuix
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
-import top.yukonga.miuix.kmp.theme.ColorSchemeMode
+import androidx.compose.ui.graphics.Color
+import top.youzix.neko.ui.theme.ColorMode
+import top.youzix.neko.ui.theme.miuixColorSpecOf
+import top.youzix.neko.ui.theme.miuixPaletteStyleOf
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
@@ -25,26 +27,27 @@ private val LocalIsDarkTheme = staticCompositionLocalOf { false }
 @Composable
 fun isInDarkTheme(): Boolean = LocalIsDarkTheme.current
 
-/** Theme modes offered in Settings, in display order. */
-val ThemeModeOptions: List<Pair<ColorSchemeMode, String>> = listOf(
-    ColorSchemeMode.System to "跟随系统",
-    ColorSchemeMode.Light to "浅色",
-    ColorSchemeMode.Dark to "深色",
-    ColorSchemeMode.MonetSystem to "动态取色 · 跟随系统",
-    ColorSchemeMode.MonetLight to "动态取色 · 浅色",
-    ColorSchemeMode.MonetDark to "动态取色 · 深色",
-)
-
+/**
+ * The miuix engine's theme: the same colour mode, seed colour, palette style and spec the Material
+ * engine reads, handed to miuix's own [ThemeController].
+ */
 @Composable
 fun MiuixAppTheme(
-    colorSchemeMode: ColorSchemeMode,
+    colorMode: ColorMode,
+    keyColor: Int,
+    paletteStyle: String,
+    colorSpec: String,
     content: @Composable () -> Unit,
 ) {
-    val controller = remember(colorSchemeMode) { ThemeController(colorSchemeMode = colorSchemeMode) }
-    val isDark = when (colorSchemeMode) {
-        ColorSchemeMode.Light, ColorSchemeMode.MonetLight -> false
-        ColorSchemeMode.Dark, ColorSchemeMode.MonetDark -> true
-        else -> isSystemInDarkTheme()
+    val isDark = colorMode.isDark()
+    val seed = if (keyColor == 0) null else Color(keyColor)
+    val controller = remember(colorMode, keyColor, paletteStyle, colorSpec) {
+        ThemeController(
+            colorSchemeMode = colorMode.toMiuix(),
+            keyColor = seed,
+            paletteStyle = miuixPaletteStyleOf(paletteStyle),
+            colorSpec = miuixColorSpecOf(colorSpec),
+        )
     }
     MiuixTheme(controller = controller) {
         CompositionLocalProvider(LocalIsDarkTheme provides isDark, content = content)

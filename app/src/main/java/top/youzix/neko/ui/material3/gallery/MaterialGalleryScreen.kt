@@ -101,7 +101,7 @@ fun MaterialGalleryScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .then(backdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp) + paddingValues + outerPadding,
+            contentPadding = PaddingValues(16.dp) + paddingValues + outerPadding,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item(key = "text") {
@@ -308,7 +308,7 @@ private fun Section(title: String, content: @Composable () -> Unit) {
             text = title,
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(start = 16.dp, bottom = 8.dp),
+            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
         )
         TonalCard(
             modifier = Modifier.fillMaxWidth(),

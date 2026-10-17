@@ -45,7 +45,7 @@ import top.youzix.neko.ui.miuix.MiuixAppTheme
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.ColorSchemeMode
+import top.youzix.neko.ui.theme.ColorMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
@@ -70,7 +70,12 @@ class CrashReportActivity : ComponentActivity() {
 
         val composed = runCatching {
             setContent {
-                MiuixAppTheme(colorSchemeMode = ColorSchemeMode.System) {
+                MiuixAppTheme(
+                    colorMode = ColorMode.System,
+                    keyColor = 0,
+                    paletteStyle = "TonalSpot",
+                    colorSpec = "SPEC_2021",
+                ) {
                     CrashReportScreen(
                         report = report,
                         path = path,

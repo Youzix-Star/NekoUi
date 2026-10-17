@@ -27,7 +27,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -50,6 +49,7 @@ import top.youzix.neko.ui.miuix.licenses.LicensesScreen
 import top.youzix.neko.ui.miuix.list.ListScreen
 import top.youzix.neko.ui.miuix.liquid.FloatingBottomBar
 import top.youzix.neko.ui.miuix.settings.SettingsScreen
+import top.youzix.neko.ui.miuix.theme.ThemeScreen
 import top.youzix.neko.ui.nav.Route
 import top.youzix.neko.ui.rememberMainPagerState
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
@@ -67,7 +67,6 @@ import top.yukonga.miuix.kmp.nav.core.NavDisplay
 import top.yukonga.miuix.kmp.nav.core.NavDisplayEffects
 import top.yukonga.miuix.kmp.nav.core.navBackStackOf
 import top.yukonga.miuix.kmp.nav.core.rememberNavSystemCornerRadius
-import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 const val TAB_HOME = 0
@@ -79,24 +78,13 @@ const val TAB_SETTINGS = 3
 @Composable
 fun MiuixApp() {
     val context = LocalContext.current
-    var colorSchemeMode by remember { mutableStateOf(UiEnginePrefs.loadMiuixTheme(context)) }
-
-    // One persisted switch drives translucency in both engines: this engine's liquid-glass
-    // bottom bar, and the Material 3 engine's blurred top bar.
-    val useLiquidGlass = AppState.useBlur
-
-    MiuixAppTheme(colorSchemeMode = colorSchemeMode) {
+    MiuixAppTheme(
+        colorMode = AppState.colorMode,
+        keyColor = AppState.keyColor,
+        paletteStyle = AppState.paletteStyle,
+        colorSpec = AppState.colorSpec,
+    ) {
         MiuixShell(
-            colorSchemeMode = colorSchemeMode,
-            onColorSchemeModeChange = {
-                colorSchemeMode = it
-                UiEnginePrefs.saveMiuixTheme(context, it)
-            },
-            useLiquidGlass = useLiquidGlass,
-            onUseLiquidGlassChange = {
-                AppState.useBlur = it
-                UiEnginePrefs.saveUseBlur(context, it)
-            },
             engine = AppState.engine,
             onEngineChange = {
                 AppState.engine = it
@@ -108,13 +96,10 @@ fun MiuixApp() {
 
 @Composable
 fun MiuixShell(
-    colorSchemeMode: ColorSchemeMode,
-    onColorSchemeModeChange: (ColorSchemeMode) -> Unit,
-    useLiquidGlass: Boolean,
-    onUseLiquidGlassChange: (Boolean) -> Unit,
     engine: UiEngine,
     onEngineChange: (UiEngine) -> Unit,
 ) {
+    val useLiquidGlass = AppState.useBlur
     val navigationItems = remember {
         listOf(
             NavigationItem(label = "首页", icon = AppIcons.Home),
@@ -170,16 +155,19 @@ fun MiuixShell(
                     scrollBehavior = mainScrollBehavior,
                     backdrop = backdrop,
                     useLiquidGlass = useLiquidGlass,
-                    colorSchemeMode = colorSchemeMode,
-                    onColorSchemeModeChange = onColorSchemeModeChange,
-                    useLiquidGlassChange = onUseLiquidGlassChange,
                     engine = engine,
                     onEngineChange = onEngineChange,
                     onNotify = notify,
+                    onOpenTheme = { navigator.push(Route.Theme) },
                     onOpenAbout = { navigator.push(Route.About) },
                     onOpenLicenses = { navigator.push(Route.Licenses) },
                     onTabSelected = { index -> mainPagerState.animateToPage(index) },
                 )
+            }
+
+            entry<Route.Theme> {
+                LaunchedEffect(Unit) { CrashHandler.note("二级页面 主题") }
+                ThemeScreen(onBack = { navigator.pop() })
             }
 
             entry<Route.About> {
@@ -221,12 +209,10 @@ private fun MiuixTabs(
     scrollBehavior: ScrollBehavior,
     backdrop: LayerBackdrop,
     useLiquidGlass: Boolean,
-    colorSchemeMode: ColorSchemeMode,
-    onColorSchemeModeChange: (ColorSchemeMode) -> Unit,
-    useLiquidGlassChange: (Boolean) -> Unit,
     engine: UiEngine,
     onEngineChange: (UiEngine) -> Unit,
     onNotify: (String) -> Unit,
+    onOpenTheme: () -> Unit,
     onOpenAbout: () -> Unit,
     onOpenLicenses: () -> Unit,
     onTabSelected: (Int) -> Unit,
@@ -311,12 +297,9 @@ private fun MiuixTabs(
                     else -> SettingsScreen(
                         contentPadding = pagePadding,
                         scrollBehavior = scrollBehavior,
-                        colorSchemeMode = colorSchemeMode,
-                        onColorSchemeModeChange = onColorSchemeModeChange,
-                        useLiquidGlass = useLiquidGlass,
-                        onUseLiquidGlassChange = useLiquidGlassChange,
                         engine = engine,
                         onEngineChange = onEngineChange,
+                        onOpenTheme = { onOpenTheme() },
                         onOpenAbout = onOpenAbout,
                         onOpenLicenses = onOpenLicenses,
                     )

@@ -6,46 +6,62 @@
 package top.youzix.neko.ui.material3
 
 import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.materialkolor.rememberDynamicColorScheme
+import top.youzix.neko.ui.theme.ColorMode
+import top.youzix.neko.ui.theme.colorSpecOf
+import top.youzix.neko.ui.theme.defaultMaterialScheme
+import top.youzix.neko.ui.theme.effectiveFor
+import top.youzix.neko.ui.theme.paletteStyleOf
 
-/** Light/dark choice for the Material Design engine. */
-enum class ThemeMode(val label: String) {
-    System("跟随系统"),
-    Light("浅色"),
-    Dark("深色"),
-    ;
-
-    companion object {
-        fun fromLabel(label: String?): ThemeMode = entries.firstOrNull { it.label == label } ?: System
-    }
-}
+/** Used when the platform cannot hand us the wallpaper colour. */
+private val FallbackSeed = Color(0xFF6750A4)
 
 /**
- * Material Design theme.
- *
- * Dynamic colour is on by default, so on Android 12+ the palette is taken from the wallpaper and
- * the fallback scheme is only used when the user turns it off.
+ * The Material engine's theme, generated the way SukiSU does it: a non-monet mode is Material's
+ * own scheme, a monet mode is either the wallpaper's palette (seed `0`) or a palette generated
+ * from the seed colour with the chosen style and spec.
  */
 @Composable
 fun MaterialAppTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    colorMode: ColorMode,
+    keyColor: Int,
+    paletteStyle: String,
+    colorSpec: String,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+    val isDark = colorMode.isDark()
+    val style = paletteStyleOf(paletteStyle)
+    val spec = colorSpecOf(colorSpec)
 
-        darkTheme -> darkColorScheme()
-        else -> lightColorScheme()
+    val scheme = when {
+        !colorMode.isMonet -> defaultMaterialScheme(isDark)
+
+        keyColor != 0 -> rememberDynamicColorScheme(
+            seedColor = Color(keyColor),
+            isDark = isDark,
+            isAmoled = false,
+            style = style,
+            specVersion = spec.effectiveFor(style),
+        )
+
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
+            if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+
+        else -> rememberDynamicColorScheme(
+            seedColor = FallbackSeed,
+            isDark = isDark,
+            isAmoled = false,
+            style = style,
+            specVersion = spec.effectiveFor(style),
+        )
     }
-    MaterialTheme(colorScheme = colorScheme, content = content)
+
+    MaterialTheme(colorScheme = scheme, content = content)
 }

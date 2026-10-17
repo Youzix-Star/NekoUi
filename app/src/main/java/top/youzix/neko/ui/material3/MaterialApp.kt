@@ -11,7 +11,6 @@
 package top.youzix.neko.ui.material3
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -36,7 +35,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -48,6 +46,7 @@ import kotlinx.coroutines.launch
 import top.youzix.neko.AppState
 import top.youzix.neko.crash.CrashHandler
 import top.youzix.neko.demo.HomeTarget
+import top.youzix.neko.ui.UiEngine
 import top.youzix.neko.ui.UiEnginePrefs
 import top.youzix.neko.ui.material3.about.MaterialAboutScreen
 import top.youzix.neko.ui.material3.gallery.MaterialGalleryScreen
@@ -55,6 +54,7 @@ import top.youzix.neko.ui.material3.home.MaterialHomeScreen
 import top.youzix.neko.ui.material3.licenses.MaterialLicensesScreen
 import top.youzix.neko.ui.material3.list.MaterialListScreen
 import top.youzix.neko.ui.material3.settings.MaterialSettingsScreen
+import top.youzix.neko.ui.material3.theme.MaterialThemeScreen
 import top.youzix.neko.ui.material3.widgets.SwipeableSnackbarHost
 import top.youzix.neko.ui.nav.Route
 import top.youzix.neko.ui.rememberMainPagerState
@@ -72,25 +72,17 @@ private const val TAB_SETTINGS = 3
 @Composable
 fun MaterialApp() {
     val context = LocalContext.current
-    var themeMode by remember { mutableStateOf(UiEnginePrefs.loadMaterialTheme(context)) }
-    var dynamicColor by remember { mutableStateOf(UiEnginePrefs.loadDynamicColor(context)) }
-    val darkTheme = when (themeMode) {
-        ThemeMode.System -> isSystemInDarkTheme()
-        ThemeMode.Light -> false
-        ThemeMode.Dark -> true
-    }
-
-    MaterialAppTheme(darkTheme = darkTheme, dynamicColor = dynamicColor) {
+    MaterialAppTheme(
+        colorMode = AppState.colorMode,
+        keyColor = AppState.keyColor,
+        paletteStyle = AppState.paletteStyle,
+        colorSpec = AppState.colorSpec,
+    ) {
         MaterialShell(
-            themeMode = themeMode,
-            onThemeModeChange = {
-                themeMode = it
-                UiEnginePrefs.saveMaterialTheme(context, it)
-            },
-            dynamicColor = dynamicColor,
-            onDynamicColorChange = {
-                dynamicColor = it
-                UiEnginePrefs.saveDynamicColor(context, it)
+            engine = AppState.engine,
+            onEngineChange = {
+                AppState.engine = it
+                UiEnginePrefs.save(context, it)
             },
         )
     }
@@ -98,10 +90,8 @@ fun MaterialApp() {
 
 @Composable
 private fun MaterialShell(
-    themeMode: ThemeMode,
-    onThemeModeChange: (ThemeMode) -> Unit,
-    dynamicColor: Boolean,
-    onDynamicColorChange: (Boolean) -> Unit,
+    engine: UiEngine,
+    onEngineChange: (UiEngine) -> Unit,
 ) {
     val context = LocalContext.current
     val labels = listOf("首页", "列表", "组件", "设置")
@@ -182,26 +172,23 @@ private fun MaterialShell(
                             TAB_SETTINGS -> MaterialSettingsScreen(
                                 outerPadding = outerPadding,
                                 useBlur = AppState.useBlur,
-                                themeMode = themeMode,
-                                onThemeModeChange = onThemeModeChange,
-                                dynamicColor = dynamicColor,
-                                onDynamicColorChange = onDynamicColorChange,
-                                useBlurEnabled = AppState.useBlur,
-                                onUseBlurChange = {
-                                    AppState.useBlur = it
-                                    UiEnginePrefs.saveUseBlur(context, it)
-                                },
-                                engine = AppState.engine,
-                                onEngineChange = {
-                                    AppState.engine = it
-                                    UiEnginePrefs.save(context, it)
-                                },
+                                engine = engine,
+                                onEngineChange = onEngineChange,
+                                onOpenTheme = { navigator.push(Route.Theme) },
                                 onOpenAbout = { navigator.push(Route.About) },
                                 onOpenLicenses = { navigator.push(Route.Licenses) },
                             )
                         }
                     }
                 }
+            }
+
+            entry<Route.Theme> {
+                LaunchedEffect(Unit) { CrashHandler.note("二级页面 主题") }
+                MaterialThemeScreen(
+                    onBack = { navigator.pop() },
+                    useBlur = AppState.useBlur,
+                )
             }
 
             entry<Route.About> {

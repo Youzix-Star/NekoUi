@@ -2,8 +2,8 @@
  * Copyright 2026, Youzix-Star
  * SPDX-License-Identifier: AGPL-3.0-only
  *
- * Row layout follows SukiSU-Ultra's SettingsMiuix.kt (GPL-3.0): one card per group, a leading icon
- * on every row, and a popup dropdown rather than a dialog spinner.
+ * Row layout follows SukiSU-Ultra's SettingsMiuix.kt (GPL-3.0): appearance is one row into the
+ * theme page, then the engine, then the identity rows.
  */
 
 package top.youzix.neko.ui.miuix.settings
@@ -19,48 +19,29 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import top.youzix.neko.AppState
 import top.youzix.neko.ui.AppIcons
 import top.youzix.neko.ui.UiEngine
-import top.youzix.neko.ui.miuix.ThemeModeOptions
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
-import top.yukonga.miuix.kmp.preference.SwitchPreference
-import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 
-/**
- * 设置 — everything that changes how the shell looks, and the way into everything that describes
- * it. The page owns no state: the rows read [AppState] and write it back through the prefs object,
- * which is what makes a change survive a restart.
- */
 @Composable
 fun SettingsScreen(
     contentPadding: PaddingValues,
     scrollBehavior: ScrollBehavior,
-    colorSchemeMode: ColorSchemeMode,
-    onColorSchemeModeChange: (ColorSchemeMode) -> Unit,
-    useLiquidGlass: Boolean,
-    onUseLiquidGlassChange: (Boolean) -> Unit,
     engine: UiEngine,
     onEngineChange: (UiEngine) -> Unit,
+    onOpenTheme: () -> Unit,
     onOpenAbout: () -> Unit,
     onOpenLicenses: () -> Unit,
 ) {
-    val context = LocalContext.current
-    val themeLabels = remember { ThemeModeOptions.map { it.second } }
     val engineLabels = remember { UiEngine.entries.map { it.label } }
-    val selectedThemeIndex = ThemeModeOptions
-        .indexOfFirst { it.first == colorSchemeMode }
-        .coerceAtLeast(0)
-
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -73,22 +54,11 @@ fun SettingsScreen(
             Column {
                 SmallTitle(text = "外观")
                 Card(modifier = Modifier.fillMaxWidth()) {
-                    OverlayDropdownPreference(
-                        title = "主题模式",
-                        summary = "浅色、深色或跟随系统，动态取色跟随壁纸",
-                        items = themeLabels,
-                        selectedIndex = selectedThemeIndex,
+                    ArrowPreference(
+                        title = "主题",
+                        summary = "配色、种子色、模糊",
                         startAction = { Icon(AppIcons.Palette, null, Modifier.size(22.dp), colorScheme.onBackground) },
-                        onSelectedIndexChange = { index ->
-                            ThemeModeOptions.getOrNull(index)?.let { onColorSchemeModeChange(it.first) }
-                        },
-                    )
-                    SwitchPreference(
-                        title = "液态玻璃底栏",
-                        summary = "底栏实时模糊与高光",
-                        startAction = { Icon(AppIcons.BlurOn, null, Modifier.size(22.dp), colorScheme.onBackground) },
-                        checked = useLiquidGlass,
-                        onCheckedChange = onUseLiquidGlassChange,
+                        onClick = onOpenTheme,
                     )
                 }
             }

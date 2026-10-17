@@ -252,7 +252,7 @@ fun GalleryScreen(
 @Composable
 private fun Section(title: String, content: @Composable () -> Unit) {
     Column {
-        SmallTitle(text = title, modifier = Modifier.padding(start = 4.dp))
+        SmallTitle(text = title)
         Card(
             modifier = Modifier.fillMaxWidth(),
             insideMargin = PaddingValues(horizontal = 16.dp, vertical = 14.dp),

@@ -6,14 +6,13 @@
 package top.youzix.neko.ui
 
 import android.content.Context
-import top.youzix.neko.ui.material3.ThemeMode
-import top.yukonga.miuix.kmp.theme.ColorSchemeMode
+import top.youzix.neko.ui.theme.ColorMode
 
 /**
  * Which UI engine draws the app.
  *
  * The two engines are complete, independent implementations of the same four tabs — one built on
- * miuix, one on Material Design — and the user picks between them on the About page.
+ * miuix, one on Material Design — and the user picks between them on the Settings page.
  */
 enum class UiEngine(val id: String, val label: String) {
     Miuix("miuix", "Miuix"),
@@ -25,14 +24,15 @@ enum class UiEngine(val id: String, val label: String) {
     }
 }
 
-/** Persists the selected engine, the glass-effect switch and the theme. */
+/** Persists the engine, the glass switch, the theme and the diagnostic switch. */
 object UiEnginePrefs {
     private const val PREFS = "ui_prefs"
     private const val KEY_ENGINE = "ui_engine"
     private const val KEY_USE_BLUR = "use_blur"
-    private const val KEY_MIUIX_THEME = "miuix_theme"
-    private const val KEY_MATERIAL_THEME = "material_theme"
-    private const val KEY_DYNAMIC_COLOR = "dynamic_color"
+    private const val KEY_COLOR_MODE = "color_mode"
+    private const val KEY_KEY_COLOR = "key_color"
+    private const val KEY_PALETTE_STYLE = "palette_style"
+    private const val KEY_COLOR_SPEC = "color_spec"
     private const val KEY_DEBUG_MODE = "debug_mode"
 
     private fun prefs(context: Context) =
@@ -47,7 +47,7 @@ object UiEnginePrefs {
 
     /**
      * Whether translucency is on: the miuix bottom bar's liquid glass and the Material 3 top
-     * bar's blur. Defaults to `true`, matching the reference project.
+     * bar's blur.
      */
     fun loadUseBlur(context: Context): Boolean =
         prefs(context).getBoolean(KEY_USE_BLUR, true)
@@ -56,32 +56,36 @@ object UiEnginePrefs {
         prefs(context).edit().putBoolean(KEY_USE_BLUR, useBlur).apply()
     }
 
-    /** The miuix engine's theme mode, by enum name; defaults to dynamic colour following the system. */
-    fun loadMiuixTheme(context: Context): ColorSchemeMode {
-        val stored = prefs(context).getString(KEY_MIUIX_THEME, null) ?: return ColorSchemeMode.MonetSystem
-        return runCatching { ColorSchemeMode.valueOf(stored) }.getOrDefault(ColorSchemeMode.MonetSystem)
+    /** Light/dark/monet choice, by enum name. */
+    fun loadColorMode(context: Context): ColorMode =
+        ColorMode.fromName(prefs(context).getString(KEY_COLOR_MODE, null))
+
+    fun saveColorMode(context: Context, mode: ColorMode) {
+        prefs(context).edit().putString(KEY_COLOR_MODE, mode.name).apply()
     }
 
-    fun saveMiuixTheme(context: Context, mode: ColorSchemeMode) {
-        prefs(context).edit().putString(KEY_MIUIX_THEME, mode.name).apply()
+    /** Seed colour as ARGB; `0` follows the wallpaper. */
+    fun loadKeyColor(context: Context): Int =
+        prefs(context).getInt(KEY_KEY_COLOR, 0)
+
+    fun saveKeyColor(context: Context, color: Int) {
+        prefs(context).edit().putInt(KEY_KEY_COLOR, color).apply()
     }
 
-    /** The Material engine's light/dark choice. */
-    fun loadMaterialTheme(context: Context): ThemeMode {
-        val stored = prefs(context).getString(KEY_MATERIAL_THEME, null) ?: return ThemeMode.System
-        return ThemeMode.entries.firstOrNull { it.name == stored } ?: ThemeMode.System
+    /** Palette style name, shared by both engines. */
+    fun loadPaletteStyle(context: Context): String =
+        prefs(context).getString(KEY_PALETTE_STYLE, null) ?: "TonalSpot"
+
+    fun savePaletteStyle(context: Context, style: String) {
+        prefs(context).edit().putString(KEY_PALETTE_STYLE, style).apply()
     }
 
-    fun saveMaterialTheme(context: Context, mode: ThemeMode) {
-        prefs(context).edit().putString(KEY_MATERIAL_THEME, mode.name).apply()
-    }
+    /** Colour spec name, shared by both engines. */
+    fun loadColorSpec(context: Context): String =
+        prefs(context).getString(KEY_COLOR_SPEC, null) ?: "SPEC_2021"
 
-    /** Whether the Material palette is taken from the wallpaper. */
-    fun loadDynamicColor(context: Context): Boolean =
-        prefs(context).getBoolean(KEY_DYNAMIC_COLOR, true)
-
-    fun saveDynamicColor(context: Context, enabled: Boolean) {
-        prefs(context).edit().putBoolean(KEY_DYNAMIC_COLOR, enabled).apply()
+    fun saveColorSpec(context: Context, spec: String) {
+        prefs(context).edit().putString(KEY_COLOR_SPEC, spec).apply()
     }
 
     /** Whether the diagnostic rows are on show. */
@@ -91,5 +95,4 @@ object UiEnginePrefs {
     fun saveDebugMode(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean(KEY_DEBUG_MODE, enabled).apply()
     }
-
 }
