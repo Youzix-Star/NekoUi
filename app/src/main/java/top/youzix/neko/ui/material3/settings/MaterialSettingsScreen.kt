@@ -32,7 +32,6 @@ import androidx.compose.ui.unit.dp
 import top.youzix.neko.AppState
 import top.youzix.neko.ui.AppIcons
 import top.youzix.neko.ui.UiEngine
-import top.youzix.neko.ui.UiEnginePrefs
 import top.youzix.neko.ui.material3.ThemeMode
 import top.youzix.neko.ui.material3.components.IconTile
 import top.youzix.neko.ui.material3.components.SegmentedColumn
@@ -42,7 +41,6 @@ import top.youzix.neko.ui.material3.components.SegmentedSwitchItem
 import top.youzix.neko.ui.material3.material3AppBarColor
 import top.youzix.neko.ui.material3.material3BlurEffect
 import top.youzix.neko.ui.material3.rememberMaterial3BlurBackdrop
-import top.youzix.neko.ui.predictiveback.PredictiveBackStyle
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 
 /**
@@ -66,7 +64,6 @@ fun MaterialSettingsScreen(
     onOpenLicenses: () -> Unit,
 ) {
     val context = LocalContext.current
-    val predictiveBackStyle = AppState.predictiveBackStyle
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val backdrop = rememberMaterial3BlurBackdrop(useBlur)
 
@@ -93,8 +90,7 @@ fun MaterialSettingsScreen(
                 .fillMaxSize()
                 .then(backdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier)
                 .verticalScroll(rememberScrollState())
-                .padding(paddingValues + outerPadding)
-                .padding(vertical = 8.dp),
+                .padding(paddingValues + outerPadding),
         ) {
             SegmentedColumn(
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 13.dp),
@@ -128,22 +124,6 @@ fun MaterialSettingsScreen(
                         summary = "滚动时顶栏的半透明模糊",
                         checked = useBlurEnabled,
                         onCheckedChange = onUseBlurChange,
-                    )
-                }
-                item {
-                    SegmentedDropdownItem(
-                        icon = AppIcons.Speed,
-                        title = "预见式返回动画",
-                        summary = "二级页面返回时的跟手动画",
-                        items = PredictiveBackStyle.entries.map { it.label },
-                        selectedIndex = PredictiveBackStyle.entries
-                            .indexOf(predictiveBackStyle).coerceAtLeast(0),
-                        onItemSelected = { index ->
-                            PredictiveBackStyle.entries.getOrNull(index)?.let {
-                                AppState.predictiveBackStyle = it
-                                UiEnginePrefs.savePredictiveBackStyle(context, it)
-                            }
-                        },
                     )
                 }
             }

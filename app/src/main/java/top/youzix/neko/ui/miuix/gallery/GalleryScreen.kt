@@ -58,7 +58,6 @@ import top.yukonga.miuix.kmp.utils.overScrollVertical
 fun GalleryScreen(
     contentPadding: PaddingValues,
     scrollBehavior: ScrollBehavior,
-    onNotify: (String) -> Unit,
 ) {
     var switchOn by remember { mutableStateOf(true) }
     var sliderValue by remember { mutableStateOf(0.4f) }
@@ -87,7 +86,7 @@ fun GalleryScreen(
         item(key = "buttons") {
             Section(title = "按钮") {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Button(onClick = { onNotify("主要操作") }) {
+                    Button(onClick = {}) {
                         Text("主要操作", style = MiuixTheme.textStyles.button)
                     }
                     Button(onClick = {}, enabled = false) {
@@ -227,7 +226,7 @@ fun GalleryScreen(
                     Button(onClick = { showDialog = true }) {
                         Text("打开对话框", style = MiuixTheme.textStyles.button)
                     }
-                    Button(onClick = { onNotify("这是一条提示") }) {
+                    Button(onClick = {}) {
                         Text("显示提示", style = MiuixTheme.textStyles.button)
                     }
                 }
@@ -253,7 +252,7 @@ fun GalleryScreen(
 @Composable
 private fun Section(title: String, content: @Composable () -> Unit) {
     Column {
-        SmallTitle(text = title)
+        SmallTitle(text = title, modifier = Modifier.padding(start = 4.dp))
         Card(
             modifier = Modifier.fillMaxWidth(),
             insideMargin = PaddingValues(horizontal = 16.dp, vertical = 14.dp),

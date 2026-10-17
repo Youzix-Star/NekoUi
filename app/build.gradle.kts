@@ -106,6 +106,9 @@ dependencies {
     implementation(libs.miuix.preference)
     // The liquid-glass floating bottom bar is built on miuix-blur, which requires minSdk 33.
     implementation(libs.miuix.blur)
+    // SukiSU's navigation stack: NavDisplay owns the second-level pages and the platform
+    // predictive-back gesture, so there is no hand-written back animation here.
+    implementation(libs.miuix.nav)
 
     implementation(libs.androidx.activity.compose)
 

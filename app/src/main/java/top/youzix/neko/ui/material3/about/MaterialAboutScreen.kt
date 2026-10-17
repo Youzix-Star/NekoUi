@@ -317,7 +317,7 @@ private fun AppHeader(onNotify: (String) -> Unit) {
         Spacer(modifier = Modifier.height(8.dp))
         // Seven taps on the signature line put the diagnostic rows on show; nothing says so.
         Text(
-            text = "只有界面，没有别的。",
+            text = "Ciallo～(∠・ω c)⌒★",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.clickable {

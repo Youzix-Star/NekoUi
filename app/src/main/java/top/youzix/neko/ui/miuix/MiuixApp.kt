@@ -1,6 +1,9 @@
 /*
  * Copyright 2026, Youzix-Star
  * SPDX-License-Identifier: AGPL-3.0-only
+ *
+ * The shell's navigation is SukiSU-Ultra's (GPL-3.0): miuix-nav's `NavDisplay` owns the back stack
+ * and the platform predictive-back gesture, so there is no hand-written back animation here.
  */
 
 package top.youzix.neko.ui.miuix
@@ -47,10 +50,8 @@ import top.youzix.neko.ui.miuix.licenses.LicensesScreen
 import top.youzix.neko.ui.miuix.list.ListScreen
 import top.youzix.neko.ui.miuix.liquid.FloatingBottomBar
 import top.youzix.neko.ui.miuix.settings.SettingsScreen
-import top.youzix.neko.ui.predictiveback.PredictiveBackHost
+import top.youzix.neko.ui.nav.Route
 import top.youzix.neko.ui.rememberMainPagerState
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.NavigationItem
 import top.yukonga.miuix.kmp.basic.Scaffold
@@ -61,6 +62,11 @@ import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
+import top.yukonga.miuix.kmp.nav.core.NavController
+import top.yukonga.miuix.kmp.nav.core.NavDisplay
+import top.yukonga.miuix.kmp.nav.core.NavDisplayEffects
+import top.yukonga.miuix.kmp.nav.core.navBackStackOf
+import top.yukonga.miuix.kmp.nav.core.rememberNavSystemCornerRadius
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -68,17 +74,6 @@ const val TAB_HOME = 0
 const val TAB_LIST = 1
 const val TAB_GALLERY = 2
 const val TAB_SETTINGS = 3
-
-/**
- * Second-level pages.
- *
- * Only these respond to a back gesture: a tab switch moves between siblings, so the platform
- * transition (which previews the *parent* you are returning to) has no meaning there.
- */
-enum class MiuixSubPage(val title: String) {
-    About("关于"),
-    Licenses("开源许可"),
-}
 
 /** The miuix engine: large-title app bar, a pager of tabs, and the liquid-glass bottom bar. */
 @Composable
@@ -120,8 +115,6 @@ fun MiuixShell(
     engine: UiEngine,
     onEngineChange: (UiEngine) -> Unit,
 ) {
-    var subPage by remember { mutableStateOf<MiuixSubPage?>(null) }
-
     val navigationItems = remember {
         listOf(
             NavigationItem(label = "首页", icon = AppIcons.Home),
@@ -137,14 +130,17 @@ fun MiuixShell(
     val mainScrollBehavior = MiuixScrollBehavior()
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-    val notify: (String) -> Unit = { message ->
-        coroutineScope.launch { snackbarHostState.showSnackbar(message) }
-    }
 
     val surfaceColor = MiuixTheme.colorScheme.surface
     val backdrop = rememberLayerBackdrop {
         drawRect(surfaceColor)
         drawContent()
+    }
+
+    val backStack = remember { navBackStackOf(Route.Main) }
+    val navigator = remember { NavController(backStack) }
+    val notify: (String) -> Unit = { message ->
+        coroutineScope.launch { snackbarHostState.showSnackbar(message) }
     }
 
     // Adopt the pager's position after the user swipes between tabs by hand.
@@ -153,20 +149,19 @@ fun MiuixShell(
         CrashHandler.note("页签 ${titles.getOrNull(pagerState.currentPage) ?: pagerState.currentPage}")
     }
 
-    // ---- level-1 back: no predictive visual, just the tab-switch animation back to home ----
-    BackHandler(enabled = subPage == null && mainPagerState.selectedPage != 0) {
+    // ---- level-1 back: no second-level page is open, so back returns to the first tab ----
+    BackHandler(enabled = backStack.size == 1 && mainPagerState.selectedPage != 0) {
         mainPagerState.animateToPage(0)
     }
 
-    // ---- second-level pages ----
-    // The gesture, its animation and the two stacked layers all live in PredictiveBackHost, which
-    // both engines share. The shell only says what the level-one content and the page are.
     Box(modifier = Modifier.fillMaxSize()) {
-        PredictiveBackHost(
-            subPageOpen = subPage != null,
-            style = AppState.predictiveBackStyle,
-            onDismissed = { subPage = null },
-            levelOne = {
+        NavDisplay(
+            navController = navigator,
+            effects = NavDisplayEffects(cornerClipRadius = rememberNavSystemCornerRadius()),
+            onBack = { navigator.pop() },
+        ) {
+            entry<Route.Main> {
+                LaunchedEffect(Unit) { CrashHandler.note("一级页面") }
                 MiuixTabs(
                     titles = titles,
                     navigationItems = navigationItems,
@@ -181,58 +176,29 @@ fun MiuixShell(
                     engine = engine,
                     onEngineChange = onEngineChange,
                     onNotify = notify,
-                    onOpenAbout = { subPage = MiuixSubPage.About },
-                    onOpenLicenses = { subPage = MiuixSubPage.Licenses },
+                    onOpenAbout = { navigator.push(Route.About) },
+                    onOpenLicenses = { navigator.push(Route.Licenses) },
                     onTabSelected = { index -> mainPagerState.animateToPage(index) },
                 )
-            },
-            subPage = { closeSubPage ->
-                val page = subPage
-                if (page != null) {
-                    // One scroll behaviour, handed to the app bar *and* to the page below it: giving
-                    // it to the page alone is what stops a page from scrolling.
-                    val pageScrollBehavior = MiuixScrollBehavior()
-                    LaunchedEffect(page) { CrashHandler.note("二级页面 ${page.title}") }
-                    Scaffold(
-                        topBar = {
-                            TopAppBar(
-                                title = page.title,
-                                scrollBehavior = pageScrollBehavior,
-                                navigationIcon = {
-                                    IconButton(onClick = closeSubPage) {
-                                        Icon(
-                                            imageVector = AppIcons.Back,
-                                            contentDescription = "返回",
-                                        )
-                                    }
-                                },
-                            )
-                        },
-                    ) { innerPadding ->
-                        val layoutDirection = LocalLayoutDirection.current
-                        val subPadding = PaddingValues(
-                            start = innerPadding.calculateStartPadding(layoutDirection) + 12.dp,
-                            top = innerPadding.calculateTopPadding() + 12.dp,
-                            end = innerPadding.calculateEndPadding(layoutDirection) + 12.dp,
-                            bottom = innerPadding.calculateBottomPadding() + 24.dp,
-                        )
-                        when (page) {
-                            MiuixSubPage.About -> AboutScreen(
-                                contentPadding = subPadding,
-                                scrollBehavior = pageScrollBehavior,
-                                onOpenLicenses = { subPage = MiuixSubPage.Licenses },
-                                onNotify = notify,
-                            )
+            }
 
-                            MiuixSubPage.Licenses -> LicensesScreen(contentPadding = subPadding)
-                        }
-                    }
-                }
-            },
-        )
+            entry<Route.About> {
+                LaunchedEffect(Unit) { CrashHandler.note("二级页面 关于") }
+                AboutScreen(
+                    onBack = { navigator.pop() },
+                    onOpenLicenses = { navigator.push(Route.Licenses) },
+                    onNotify = notify,
+                )
+            }
 
-        // The host lives here, not inside the tab Scaffold: a second-level page is drawn over that
-        // Scaffold, so a message posted from one would otherwise appear behind it.
+            entry<Route.Licenses> {
+                LaunchedEffect(Unit) { CrashHandler.note("二级页面 开源许可") }
+                LicensesScreen(onBack = { navigator.pop() })
+            }
+        }
+
+        // The host lives outside the page scaffolds: a message posted from a second-level page
+        // must sit above that page, the way a toast would.
         SnackbarHost(
             state = snackbarHostState,
             modifier = Modifier
@@ -340,7 +306,6 @@ private fun MiuixTabs(
                     TAB_GALLERY -> GalleryScreen(
                         contentPadding = pagePadding,
                         scrollBehavior = scrollBehavior,
-                        onNotify = onNotify,
                     )
 
                     else -> SettingsScreen(

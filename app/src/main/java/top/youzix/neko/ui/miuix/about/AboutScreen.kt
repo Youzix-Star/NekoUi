@@ -28,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
@@ -41,7 +42,13 @@ import top.youzix.neko.ui.AppIcons
 import top.youzix.neko.ui.AppMark
 import top.youzix.neko.ui.UiEnginePrefs
 import top.youzix.neko.util.DeviceInfo
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
@@ -63,6 +70,37 @@ private const val REPOSITORY_URL = "https://github.com/Youzix-Star/NekoUi"
  */
 @Composable
 fun AboutScreen(
+    onBack: () -> Unit,
+    onOpenLicenses: () -> Unit,
+    onNotify: (String) -> Unit,
+) {
+    val scrollBehavior = MiuixScrollBehavior()
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = "关于",
+                scrollBehavior = scrollBehavior,
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(imageVector = AppIcons.Back, contentDescription = "返回")
+                    }
+                },
+            )
+        },
+    ) { innerPadding ->
+        val layoutDirection = LocalLayoutDirection.current
+        val contentPadding = PaddingValues(
+            start = innerPadding.calculateStartPadding(layoutDirection),
+            top = innerPadding.calculateTopPadding(),
+            end = innerPadding.calculateEndPadding(layoutDirection),
+            bottom = innerPadding.calculateBottomPadding() + 24.dp,
+        )
+        AboutContent(contentPadding, scrollBehavior, onOpenLicenses, onNotify)
+    }
+}
+
+@Composable
+private fun AboutContent(
     contentPadding: PaddingValues,
     scrollBehavior: ScrollBehavior,
     onOpenLicenses: () -> Unit,
@@ -280,7 +318,7 @@ private fun AppHeader(onNotify: (String) -> Unit) {
         Spacer(modifier = Modifier.height(8.dp))
         // Seven taps on the signature line put the diagnostic rows on show; nothing says so.
         Text(
-            text = "只有界面，没有别的。",
+            text = "Ciallo～(∠・ω c)⌒★",
             style = MiuixTheme.textStyles.footnote2,
             color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
             modifier = Modifier.clickable {

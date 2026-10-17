@@ -9,7 +9,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import top.youzix.neko.ui.UiEngine
-import top.youzix.neko.ui.predictiveback.PredictiveBackStyle
 
 /**
  * Process-wide UI state for the shell.
@@ -26,9 +25,6 @@ object AppState {
      * blur. Persisted alongside the engine.
      */
     var useBlur by mutableStateOf(true)
-
-    /** Which predictive-back animation plays on second-level pages. */
-    var predictiveBackStyle by mutableStateOf(PredictiveBackStyle.Miuix)
 
     /**
      * Whether the diagnostic rows are on show.

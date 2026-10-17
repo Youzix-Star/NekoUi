@@ -24,9 +24,7 @@ import androidx.compose.ui.unit.dp
 import top.youzix.neko.AppState
 import top.youzix.neko.ui.AppIcons
 import top.youzix.neko.ui.UiEngine
-import top.youzix.neko.ui.UiEnginePrefs
 import top.youzix.neko.ui.miuix.ThemeModeOptions
-import top.youzix.neko.ui.predictiveback.PredictiveBackStyle
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
@@ -59,7 +57,6 @@ fun SettingsScreen(
     val context = LocalContext.current
     val themeLabels = remember { ThemeModeOptions.map { it.second } }
     val engineLabels = remember { UiEngine.entries.map { it.label } }
-    val backStyleLabels = remember { PredictiveBackStyle.entries.map { it.label } }
     val selectedThemeIndex = ThemeModeOptions
         .indexOfFirst { it.first == colorSchemeMode }
         .coerceAtLeast(0)
@@ -84,20 +81,6 @@ fun SettingsScreen(
                         startAction = { Icon(AppIcons.Palette, null, Modifier.size(22.dp), colorScheme.onBackground) },
                         onSelectedIndexChange = { index ->
                             ThemeModeOptions.getOrNull(index)?.let { onColorSchemeModeChange(it.first) }
-                        },
-                    )
-                    OverlayDropdownPreference(
-                        title = "预见式返回动画",
-                        summary = "二级页面返回时的跟手动画",
-                        items = backStyleLabels,
-                        selectedIndex = PredictiveBackStyle.entries
-                            .indexOf(AppState.predictiveBackStyle).coerceAtLeast(0),
-                        startAction = { Icon(AppIcons.Speed, null, Modifier.size(22.dp), colorScheme.onBackground) },
-                        onSelectedIndexChange = { index ->
-                            PredictiveBackStyle.entries.getOrNull(index)?.let {
-                                AppState.predictiveBackStyle = it
-                                UiEnginePrefs.savePredictiveBackStyle(context, it)
-                            }
                         },
                     )
                     SwitchPreference(

@@ -2,8 +2,8 @@
  * Copyright 2026, Youzix-Star
  * SPDX-License-Identifier: AGPL-3.0-only
  *
- * The shell follows InstallerX-Revived's Material 3 layout (GPL-3.0): an outer Scaffold that owns
- * only the bottom navigation, with each page carrying its own large top app bar.
+ * The shell's navigation is SukiSU-Ultra's (GPL-3.0): miuix-nav's `NavDisplay` owns the back stack
+ * and the platform predictive-back gesture.
  */
 
 @file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -56,22 +56,18 @@ import top.youzix.neko.ui.material3.licenses.MaterialLicensesScreen
 import top.youzix.neko.ui.material3.list.MaterialListScreen
 import top.youzix.neko.ui.material3.settings.MaterialSettingsScreen
 import top.youzix.neko.ui.material3.widgets.SwipeableSnackbarHost
-import top.youzix.neko.ui.predictiveback.PredictiveBackHost
+import top.youzix.neko.ui.nav.Route
 import top.youzix.neko.ui.rememberMainPagerState
+import top.yukonga.miuix.kmp.nav.core.NavController
+import top.yukonga.miuix.kmp.nav.core.NavDisplay
+import top.yukonga.miuix.kmp.nav.core.NavDisplayEffects
+import top.yukonga.miuix.kmp.nav.core.navBackStackOf
+import top.yukonga.miuix.kmp.nav.core.rememberNavSystemCornerRadius
 
 private const val TAB_HOME = 0
 private const val TAB_LIST = 1
 private const val TAB_GALLERY = 2
 private const val TAB_SETTINGS = 3
-
-/**
- * Second-level pages. Only these take part in predictive back: switching between the bottom
- * navigation tabs moves between siblings, so there is no parent screen to preview.
- */
-private enum class MaterialSubPage(val title: String) {
-    About("关于"),
-    Licenses("开源许可"),
-}
 
 @Composable
 fun MaterialApp() {
@@ -107,9 +103,7 @@ private fun MaterialShell(
     dynamicColor: Boolean,
     onDynamicColorChange: (Boolean) -> Unit,
 ) {
-    var subPage by remember { mutableStateOf<MaterialSubPage?>(null) }
     val context = LocalContext.current
-
     val labels = listOf("首页", "列表", "组件", "设置")
     // Filled icon while selected, outlined while not: SukiSU's bar switches between the two.
     val navItems = listOf(
@@ -127,25 +121,27 @@ private fun MaterialShell(
         coroutineScope.launch { snackbarHostState.showSnackbar(message) }
     }
 
+    val backStack = remember { navBackStackOf(Route.Main) }
+    val navigator = remember { NavController(backStack) }
+
     // Adopt the pager's position after the user swipes between tabs by hand.
     LaunchedEffect(pagerState.currentPage) {
         mainPagerState.syncPage()
         CrashHandler.note("页签 ${labels.getOrNull(pagerState.currentPage) ?: pagerState.currentPage}")
     }
 
-    // ---- level-1 back: no predictive visual, just the tab-switch animation back to home ----
-    BackHandler(enabled = subPage == null && mainPagerState.selectedPage != 0) {
+    // ---- level-1 back: no second-level page is open, so back returns to the first tab ----
+    BackHandler(enabled = backStack.size == 1 && mainPagerState.selectedPage != 0) {
         mainPagerState.animateToPage(0)
     }
 
-    // ---- second-level pages ----
-    // A level-two page owns its whole surface, app bar included, exactly as the four tabs do.
     Box(modifier = Modifier.fillMaxSize()) {
-        PredictiveBackHost(
-            subPageOpen = subPage != null,
-            style = AppState.predictiveBackStyle,
-            onDismissed = { subPage = null },
-            levelOne = {
+        NavDisplay(
+            navController = navigator,
+            effects = NavDisplayEffects(cornerClipRadius = rememberNavSystemCornerRadius()),
+            onBack = { navigator.pop() },
+        ) {
+            entry<Route.Main> {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
@@ -171,20 +167,16 @@ private fun MaterialShell(
                                 onOpenLink = { target ->
                                     when (target) {
                                         HomeTarget.Gallery -> mainPagerState.animateToPage(TAB_GALLERY)
-                                        HomeTarget.Licenses -> subPage = MaterialSubPage.Licenses
+                                        HomeTarget.Licenses -> navigator.push(Route.Licenses)
                                     }
                                 },
                             )
 
-                            TAB_LIST -> MaterialListScreen(
-                                outerPadding = outerPadding,
-                                useBlur = AppState.useBlur,
-                            )
+                            TAB_LIST -> MaterialListScreen(outerPadding = outerPadding)
 
                             TAB_GALLERY -> MaterialGalleryScreen(
                                 outerPadding = outerPadding,
                                 useBlur = AppState.useBlur,
-                                onNotify = notify,
                             )
 
                             TAB_SETTINGS -> MaterialSettingsScreen(
@@ -204,37 +196,35 @@ private fun MaterialShell(
                                     AppState.engine = it
                                     UiEnginePrefs.save(context, it)
                                 },
-                                onOpenAbout = { subPage = MaterialSubPage.About },
-                                onOpenLicenses = { subPage = MaterialSubPage.Licenses },
+                                onOpenAbout = { navigator.push(Route.About) },
+                                onOpenLicenses = { navigator.push(Route.Licenses) },
                             )
                         }
                     }
                 }
-            },
-            subPage = { closeSubPage ->
-                LaunchedEffect(subPage) {
-                    CrashHandler.note("二级页面 ${subPage?.title ?: ""}")
-                }
-                when (subPage) {
-                    MaterialSubPage.About -> MaterialAboutScreen(
-                        onBack = closeSubPage,
-                        useBlur = AppState.useBlur,
-                        onOpenLicenses = { subPage = MaterialSubPage.Licenses },
-                        onNotify = notify,
-                    )
+            }
 
-                    MaterialSubPage.Licenses -> MaterialLicensesScreen(
-                        onBack = closeSubPage,
-                        useBlur = AppState.useBlur,
-                    )
+            entry<Route.About> {
+                LaunchedEffect(Unit) { CrashHandler.note("二级页面 关于") }
+                MaterialAboutScreen(
+                    onBack = { navigator.pop() },
+                    useBlur = AppState.useBlur,
+                    onOpenLicenses = { navigator.push(Route.Licenses) },
+                    onNotify = notify,
+                )
+            }
 
-                    null -> Unit
-                }
-            },
-        )
+            entry<Route.Licenses> {
+                LaunchedEffect(Unit) { CrashHandler.note("二级页面 开源许可") }
+                MaterialLicensesScreen(
+                    onBack = { navigator.pop() },
+                    useBlur = AppState.useBlur,
+                )
+            }
+        }
 
-        // The host lives here, not inside the tab Scaffold: a second-level page is drawn over that
-        // Scaffold, so a message posted from one would otherwise appear behind it.
+        // The host lives outside the page scaffolds: a message posted from a second-level page
+        // must sit above that page, the way a toast would.
         SwipeableSnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier

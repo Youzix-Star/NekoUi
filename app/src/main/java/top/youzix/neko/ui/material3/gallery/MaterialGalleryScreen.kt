@@ -71,7 +71,6 @@ import top.yukonga.miuix.kmp.blur.layerBackdrop
 fun MaterialGalleryScreen(
     outerPadding: PaddingValues,
     useBlur: Boolean,
-    onNotify: (String) -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val backdrop = rememberMaterial3BlurBackdrop(useBlur)
@@ -102,7 +101,7 @@ fun MaterialGalleryScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .then(backdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier),
-            contentPadding = PaddingValues(16.dp) + paddingValues + outerPadding,
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp) + paddingValues + outerPadding,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item(key = "text") {
@@ -125,8 +124,8 @@ fun MaterialGalleryScreen(
             item(key = "buttons") {
                 Section(title = "按钮") {
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Button(onClick = { onNotify("主要操作") }) { Text("主要操作") }
-                        FilledTonalButton(onClick = { onNotify("次要操作") }) { Text("次要") }
+                        Button(onClick = {}) { Text("主要操作") }
+                        FilledTonalButton(onClick = {}) { Text("次要") }
                         TextButton(onClick = {}, enabled = false) { Text("不可用") }
                     }
                 }
@@ -182,7 +181,7 @@ fun MaterialGalleryScreen(
                     }
                     item {
                         SegmentedListItem(
-                            onClick = { onNotify("整行可点") },
+                            onClick = {},
                             headlineContent = { Text("可点的行") },
                             supportingContent = { Text("带箭头的行会打开一个二级页") },
                             leadingContent = { IconTile(AppIcons.About, "可点的行") },
@@ -208,8 +207,8 @@ fun MaterialGalleryScreen(
                     TonalCard(
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        onClick = { onNotify("点了卡片") },
-                        onLongClick = { onNotify("长按了卡片") },
+                        onClick = {},
+                        onLongClick = {},
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text("可点的卡片", style = MaterialTheme.typography.titleMedium)
@@ -282,7 +281,7 @@ fun MaterialGalleryScreen(
                 Section(title = "对话框与提示") {
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         Button(onClick = { showDialog = true }) { Text("打开对话框") }
-                        Button(onClick = { onNotify("这是一条提示") }) { Text("显示提示") }
+                        Button(onClick = {}) { Text("显示提示") }
                     }
                 }
             }
@@ -309,7 +308,7 @@ private fun Section(title: String, content: @Composable () -> Unit) {
             text = title,
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
+            modifier = Modifier.padding(start = 16.dp, bottom = 8.dp),
         )
         TonalCard(
             modifier = Modifier.fillMaxWidth(),

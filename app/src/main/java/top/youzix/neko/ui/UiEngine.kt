@@ -7,7 +7,6 @@ package top.youzix.neko.ui
 
 import android.content.Context
 import top.youzix.neko.ui.material3.ThemeMode
-import top.youzix.neko.ui.predictiveback.PredictiveBackStyle
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 
 /**
@@ -26,12 +25,11 @@ enum class UiEngine(val id: String, val label: String) {
     }
 }
 
-/** Persists the selected engine, the glass-effect switch and the back-animation style. */
+/** Persists the selected engine, the glass-effect switch and the theme. */
 object UiEnginePrefs {
     private const val PREFS = "ui_prefs"
     private const val KEY_ENGINE = "ui_engine"
     private const val KEY_USE_BLUR = "use_blur"
-    private const val KEY_PREDICTIVE_BACK = "predictive_back"
     private const val KEY_MIUIX_THEME = "miuix_theme"
     private const val KEY_MATERIAL_THEME = "material_theme"
     private const val KEY_DYNAMIC_COLOR = "dynamic_color"
@@ -56,14 +54,6 @@ object UiEnginePrefs {
 
     fun saveUseBlur(context: Context, useBlur: Boolean) {
         prefs(context).edit().putBoolean(KEY_USE_BLUR, useBlur).apply()
-    }
-
-    /** Which predictive-back animation second-level pages use. */
-    fun loadPredictiveBackStyle(context: Context): PredictiveBackStyle =
-        PredictiveBackStyle.from(prefs(context).getString(KEY_PREDICTIVE_BACK, null))
-
-    fun savePredictiveBackStyle(context: Context, style: PredictiveBackStyle) {
-        prefs(context).edit().putString(KEY_PREDICTIVE_BACK, style.id).apply()
     }
 
     /** The miuix engine's theme mode, by enum name; defaults to dynamic colour following the system. */

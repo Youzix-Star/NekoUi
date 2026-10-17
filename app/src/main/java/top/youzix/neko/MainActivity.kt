@@ -28,7 +28,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         AppState.engine = UiEnginePrefs.load(this)
         AppState.useBlur = UiEnginePrefs.loadUseBlur(this)
-        AppState.predictiveBackStyle = UiEnginePrefs.loadPredictiveBackStyle(this)
         AppState.debugMode = UiEnginePrefs.loadDebugMode(this)
         setContent {
             when (AppState.engine) {
