@@ -11,7 +11,7 @@
 ## 工作方式
 
 - **不在本地构建。** 这台设备没有 Android SDK，也别装；唯一验证是 GitHub Actions（3～6 分钟一轮）。
-- 改完 `.kt` 先跑一遍 `python3 ../DSHA-Next/scripts/klex.py <文件>`：词法、括号平衡、未使用 import。
+- 改完 `.kt` 先跑一遍 `python3 scripts/klex.py <文件>...`：词法、括号平衡、未使用 import。
   它看不见类型，缺符号只能靠 CI。
 - 不要凭记忆写 Compose / miuix 的签名。miuix 源码：
   `https://repo1.maven.org/maven2/top/yukonga/miuix/kmp/miuix-ui-android/<版本>/miuix-ui-android-<版本>-sources.jar`。
