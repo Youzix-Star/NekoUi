@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import top.youzix.neko.AppState
 import top.youzix.neko.crash.CrashHandler
+import top.youzix.neko.demo.HomeTarget
 import top.youzix.neko.ui.UiEnginePrefs
 import top.youzix.neko.ui.material3.about.MaterialAboutScreen
 import top.youzix.neko.ui.material3.gallery.MaterialGalleryScreen
@@ -167,6 +168,12 @@ private fun MaterialShell(
                             TAB_HOME -> MaterialHomeScreen(
                                 outerPadding = outerPadding,
                                 useBlur = AppState.useBlur,
+                                onOpenLink = { target ->
+                                    when (target) {
+                                        HomeTarget.Gallery -> mainPagerState.animateToPage(TAB_GALLERY)
+                                        HomeTarget.Licenses -> subPage = MaterialSubPage.Licenses
+                                    }
+                                },
                             )
 
                             TAB_LIST -> MaterialListScreen(

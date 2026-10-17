@@ -2,31 +2,35 @@
  * Copyright 2026, Youzix-Star
  * SPDX-License-Identifier: AGPL-3.0-only
  *
- * The page skeleton and the overview rows follow InstallerX-Revived's Material 3 home page
- * (GPL-3.0-only), which may be combined with this project's AGPL-3.0-only code under GPLv3 §13.
- * The block order and the padding values match DSHA's home page so the two engines stay in step.
+ * The page is SukiSU-Ultra's home page (GPL-3.0): a hero card with the state rings, three oversized
+ * statistics, a segmented list of links, then two spec sheets. The point is the hierarchy — one
+ * huge block, then numbers, then rows — rather than a stack of equally-sized cards.
  */
 
-@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalLayoutApi::class)
 
 package top.youzix.neko.ui.material3.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.plus
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ElevatedCard
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
@@ -37,33 +41,46 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import top.youzix.neko.demo.Home
-import top.youzix.neko.demo.InfoRow
+import top.youzix.neko.demo.Hero
+import top.youzix.neko.demo.HomeLink
+import top.youzix.neko.demo.HomeTarget
+import top.youzix.neko.demo.SpecRow
 import top.youzix.neko.demo.Stat
+import top.youzix.neko.demo.Tag
 import top.youzix.neko.demo.Tone
 import top.youzix.neko.demo.demoHome
-import top.youzix.neko.ui.material3.CornerRadius
+import top.youzix.neko.ui.AppIcons
+import top.youzix.neko.ui.material3.components.IconTile
+import top.youzix.neko.ui.material3.components.SegmentedColumn
+import top.youzix.neko.ui.material3.components.SegmentedListItem
 import top.youzix.neko.ui.material3.components.StatusTag
 import top.youzix.neko.ui.material3.material3AppBarColor
 import top.youzix.neko.ui.material3.material3BlurEffect
 import top.youzix.neko.ui.material3.rememberMaterial3BlurBackdrop
-import top.youzix.neko.ui.material3.components.IconTile
-import top.youzix.neko.ui.material3.components.SegmentedColumn
-import top.youzix.neko.ui.material3.components.SegmentedListItem
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 
+private val HeroShape = RoundedCornerShape(28.dp)
+private val TileShape = RoundedCornerShape(22.dp)
+
 /**
- * 首页 — the Material 3 twin of the miuix page: same demo content, same block order, same padding.
- * Changing one engine's home page and not the other is the one thing the 双引擎 rule forbids.
+ * 首页 — the shell's front page.
  */
 @Composable
 fun MaterialHomeScreen(
     outerPadding: PaddingValues,
     useBlur: Boolean,
+    onOpenLink: (HomeTarget) -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val backdrop = rememberMaterial3BlurBackdrop(useBlur)
@@ -77,12 +94,7 @@ fun MaterialHomeScreen(
         topBar = {
             LargeFlexibleTopAppBar(
                 modifier = Modifier.material3BlurEffect(backdrop),
-                title = {
-                    Text(
-                        text = "NekoUi",
-                        modifier = Modifier.padding(start = 12.dp),
-                    )
-                },
+                title = { Text("NekoUi", modifier = Modifier.padding(start = 12.dp)) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = backdrop.material3AppBarColor(),
@@ -92,175 +104,210 @@ fun MaterialHomeScreen(
             )
         },
     ) { paddingValues ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .then(backdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier),
-            contentPadding = PaddingValues(16.dp) + paddingValues + outerPadding,
+                .then(backdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier)
+                .verticalScroll(rememberScrollState())
+                .padding(paddingValues + outerPadding)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            item { StatusCard(home) }
+            HeroCard(home.hero)
+            StatsRow(home.stats)
+            Links(home.links, onOpenLink)
+            SpecSheet(home.system)
+            SpecSheet(home.build)
+            Spacer(Modifier.height(8.dp))
+        }
+    }
+}
 
-            items(home.rows.size) { index ->
-                CompactStatusCard(home.rows[index])
-            }
+/**
+ * The hero: a filled surface with concentric state rings drawn behind the text, tags along the
+ * top, and the title set in `displaySmall` — big enough that it is the first thing read.
+ */
+@Composable
+private fun HeroCard(hero: Hero) {
+    val container = MaterialTheme.colorScheme.primary
+    val content = MaterialTheme.colorScheme.onPrimary
 
-            item {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    home.stats.forEach { stat ->
-                        StatisticCard(stat, modifier = Modifier.weight(1f))
-                    }
-                }
-            }
-
-            item {
-                SegmentedColumn(
-                    title = "概览",
-                    modifier = Modifier.padding(top = 16.dp),
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = container,
+        contentColor = content,
+        shape = HeroShape,
+    ) {
+        Box(modifier = Modifier.drawBehind { drawStatusRings(content.copy(alpha = 0.18f)) }) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 188.dp)
+                    .padding(22.dp),
+                verticalArrangement = Arrangement.SpaceBetween,
+            ) {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    home.overview.forEach { entry ->
-                        item(key = entry.title) {
-                            SegmentedListItem(
-                                headlineContent = { Text(entry.title) },
-                                supportingContent = { Text(entry.summary) },
-                                leadingContent = { IconTile(entry.icon, entry.title) },
-                            )
-                        }
+                    hero.tags.forEach { tag ->
+                        val (background, tagContent) = tagColors(tag)
+                        StatusTag(
+                            label = tag.label,
+                            backgroundColor = background,
+                            contentColor = tagContent,
+                        )
                     }
                 }
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        text = hero.title,
+                        style = MaterialTheme.typography.displaySmall,
+                        fontWeight = FontWeight.Black,
+                    )
+                    Text(
+                        text = hero.subtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontFamily = FontFamily.Monospace,
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** Three oversized numbers. */
+@Composable
+private fun StatsRow(stats: List<Stat>) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        stats.forEach { stat ->
+            StatTile(stat, modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+private fun StatTile(stat: Stat, modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier,
+        shape = TileShape,
+        color = MaterialTheme.colorScheme.surfaceBright,
+    ) {
+        Column(
+            modifier = Modifier
+                .height(88.dp)
+                .padding(14.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                text = stat.count,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.ExtraBold,
+            )
+            Text(
+                text = stat.label,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+            )
+        }
+    }
+}
+
+/** The two ways out of the home page. */
+@Composable
+private fun Links(links: List<HomeLink>, onOpenLink: (HomeTarget) -> Unit) {
+    SegmentedColumn(modifier = Modifier.fillMaxWidth()) {
+        links.forEach { link ->
+            item(key = link.title) {
+                SegmentedListItem(
+                    onClick = { onOpenLink(link.target) },
+                    headlineContent = { Text(link.title) },
+                    supportingContent = { Text(link.summary) },
+                    leadingContent = { IconTile(link.icon, link.title) },
+                    trailingContent = { Icon(AppIcons.ChevronRight, null) },
+                )
             }
         }
     }
 }
 
 /**
- * The main block: a panel coloured by state and a large faint icon as a watermark.
+ * A sheet of label/value rows, values in monospace and right-aligned — the shape a "system
+ * information" block wants: scannable on the left, precise on the right.
  */
 @Composable
-private fun StatusCard(home: Home) {
-    val (container, content) = colorsFor(home.status.tone)
-
+private fun SpecSheet(rows: List<SpecRow>) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = container,
-        shape = RoundedCornerShape(CornerRadius),
+        shape = TileShape,
+        color = MaterialTheme.colorScheme.surfaceBright,
     ) {
-        Box(modifier = Modifier.fillMaxWidth().padding(24.dp)) {
-            Icon(
-                imageVector = home.icon,
-                contentDescription = null,
-                tint = content,
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .size(88.dp)
-                    .alpha(0.16f),
-            )
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = home.status.headline,
-                    style = MaterialTheme.typography.titleMediumEmphasized,
-                    color = content,
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = home.status.detail,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = content.copy(alpha = 0.9f),
-                )
-                Text(
-                    text = home.status.hint,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = content.copy(alpha = 0.75f),
-                    modifier = Modifier.padding(top = 8.dp),
-                )
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+            rows.forEachIndexed { index, row ->
+                if (index > 0) {
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    )
+                }
                 Row(
-                    modifier = Modifier.padding(top = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 46.dp)
+                        .padding(vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    home.tags.forEach { tag ->
-                        StatusTag(
-                            label = tag.label,
-                            backgroundColor = content.copy(alpha = 0.12f),
-                            contentColor = content,
-                        )
-                    }
+                    Text(
+                        text = row.label,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = row.value,
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                        textAlign = TextAlign.End,
+                    )
                 }
             }
         }
     }
 }
 
-/** A one-line row. */
+/** Tag colours on the hero: the accent tag inverts against the surface, the others stay tonal. */
 @Composable
-private fun CompactStatusCard(row: InfoRow) {
-    val (container, content) = colorsFor(if (row.active) Tone.OK else Tone.WARN)
-
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = container,
-        shape = RoundedCornerShape(CornerRadius),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = row.icon,
-                contentDescription = null,
-                tint = content,
-                modifier = Modifier.size(20.dp),
-            )
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 12.dp),
-            ) {
-                Text(
-                    text = row.title,
-                    style = MaterialTheme.typography.bodyMediumEmphasized,
-                    color = content,
-                )
-                Text(
-                    text = row.summary,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = content.copy(alpha = 0.75f),
-                )
-            }
-            Text(
-                text = row.hint,
-                style = MaterialTheme.typography.labelSmall,
-                color = content.copy(alpha = 0.75f),
-            )
-        }
-    }
+private fun tagColors(tag: Tag): Pair<Color, Color> = when (tag.tone) {
+    Tone.ACCENT -> MaterialTheme.colorScheme.onPrimary to MaterialTheme.colorScheme.primary
+    Tone.OK -> MaterialTheme.colorScheme.tertiaryContainer to
+        MaterialTheme.colorScheme.onTertiaryContainer
+    Tone.WARN, Tone.BAD -> MaterialTheme.colorScheme.errorContainer to
+        MaterialTheme.colorScheme.onErrorContainer
+    Tone.BUSY, Tone.IDLE -> MaterialTheme.colorScheme.secondaryContainer to
+        MaterialTheme.colorScheme.onSecondaryContainer
 }
 
-/** One cell of the statistics row. */
-@Composable
-private fun StatisticCard(stat: Stat, modifier: Modifier = Modifier) {
-    ElevatedCard(modifier = modifier) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
-            Text(
-                text = stat.title,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = stat.value,
-                style = MaterialTheme.typography.titleMediumEmphasized,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-        }
-    }
-}
-
-/** The tone palette every block on this page shares. */
-@Composable
-private fun colorsFor(tone: Tone): Pair<Color, Color> = when (tone) {
-    Tone.OK -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
-    Tone.WARN, Tone.BAD ->
-        MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
-    Tone.BUSY, Tone.IDLE, Tone.ACCENT ->
-        MaterialTheme.colorScheme.surfaceContainerHigh to MaterialTheme.colorScheme.onSurface
+/**
+ * The rings in the hero's top-right corner: a solid outer circle, a dashed ring, a solid ring and a
+ * filled dot. SukiSU's signature, and the reason the flat surface does not read as an empty box.
+ */
+private fun DrawScope.drawStatusRings(color: Color) {
+    val center = Offset(size.width - 36.dp.toPx(), 32.dp.toPx())
+    val stroke = 2.dp.toPx()
+    drawCircle(color = color, radius = 112.dp.toPx(), center = center, style = Stroke(stroke))
+    drawCircle(
+        color = color,
+        radius = 84.dp.toPx(),
+        center = center,
+        style = Stroke(
+            stroke,
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 8.dp.toPx())),
+        ),
+    )
+    drawCircle(color = color, radius = 56.dp.toPx(), center = center, style = Stroke(stroke))
+    drawCircle(color = color, radius = 18.dp.toPx(), center = center)
 }

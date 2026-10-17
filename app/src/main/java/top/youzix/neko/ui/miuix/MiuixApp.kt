@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import top.youzix.neko.AppState
 import top.youzix.neko.crash.CrashHandler
+import top.youzix.neko.demo.HomeTarget
 import top.youzix.neko.ui.AppIcons
 import top.youzix.neko.ui.UiEngine
 import top.youzix.neko.ui.UiEnginePrefs
@@ -323,6 +324,12 @@ private fun MiuixTabs(
                     TAB_HOME -> HomeScreen(
                         contentPadding = pagePadding,
                         scrollBehavior = scrollBehavior,
+                        onOpenLink = { target ->
+                            when (target) {
+                                HomeTarget.Gallery -> onTabSelected(TAB_GALLERY)
+                                HomeTarget.Licenses -> onOpenLicenses()
+                            }
+                        },
                     )
 
                     TAB_LIST -> ListScreen(
