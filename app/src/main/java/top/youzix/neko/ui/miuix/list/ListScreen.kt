@@ -22,7 +22,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.horizontalScroll
@@ -64,6 +67,8 @@ import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.utils.overScrollVertical
+import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
 /**
  * 列表 — a superuser-shaped list with SukiSU's expanding search.
@@ -135,6 +140,15 @@ fun ListScreen(bottomPadding: Dp) {
             .only(WindowInsetsSides.Horizontal),
     ) { innerPadding ->
         searchStatus.SearchBox {
+            // Same padding for the refresh container and the list, as SukiSU does: the
+            // indicator is drawn inside this box, so without it the ball sits under the app bar.
+            val layoutDirection = LocalLayoutDirection.current
+            val listPadding = PaddingValues(
+                top = innerPadding.calculateTopPadding() + 6.dp,
+                start = innerPadding.calculateStartPadding(layoutDirection) + 12.dp,
+                end = innerPadding.calculateEndPadding(layoutDirection) + 12.dp,
+                bottom = innerPadding.calculateBottomPadding() + bottomPadding,
+            )
             PullToRefresh(
                 isRefreshing = isRefreshing,
                 onRefresh = {
@@ -149,17 +163,17 @@ fun ListScreen(bottomPadding: Dp) {
                 modifier = Modifier
                     .fillMaxSize()
                     .nestedScroll(scrollBehavior.nestedScrollConnection),
-                topAppBarScrollBehavior = scrollBehavior,
+                contentPadding = listPadding,
+                refreshTexts = listOf("下拉刷新", "松开刷新", "正在刷新", "刷新完成"),
             ) {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        start = 12.dp,
-                        end = 12.dp,
-                        top = innerPadding.calculateTopPadding() + 6.dp,
-                        bottom = innerPadding.calculateBottomPadding() + bottomPadding,
-                    ),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .scrollEndHaptic()
+                        .overScrollVertical(),
+                    contentPadding = listPadding,
                     verticalArrangement = Arrangement.spacedBy(12.dp),
+                    overscrollEffect = null,
                 ) {
                     item(key = "header") {
                         ListHeader(
