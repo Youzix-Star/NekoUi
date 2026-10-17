@@ -101,7 +101,7 @@ fun MaterialGalleryScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .then(backdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier),
-            contentPadding = PaddingValues(16.dp) + paddingValues + outerPadding,
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp) + paddingValues + outerPadding,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item(key = "text") {

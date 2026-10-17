@@ -16,27 +16,19 @@ enum class ColorMode(val label: String) {
     System("跟随系统"),
     Light("浅色"),
     Dark("深色"),
-    MonetSystem("动态取色 · 跟随系统"),
-    MonetLight("动态取色 · 浅色"),
-    MonetDark("动态取色 · 深色"),
     ;
-
-    val isMonet: Boolean get() = this == MonetSystem || this == MonetLight || this == MonetDark
 
     @Composable
     fun isDark(): Boolean = when (this) {
-        Light, MonetLight -> false
-        Dark, MonetDark -> true
-        System, MonetSystem -> isSystemInDarkTheme()
+        Light -> false
+        Dark -> true
+        System -> isSystemInDarkTheme()
     }
 
     fun toMiuix(): ColorSchemeMode = when (this) {
         System -> ColorSchemeMode.System
         Light -> ColorSchemeMode.Light
         Dark -> ColorSchemeMode.Dark
-        MonetSystem -> ColorSchemeMode.MonetSystem
-        MonetLight -> ColorSchemeMode.MonetLight
-        MonetDark -> ColorSchemeMode.MonetDark
     }
 
     companion object {

@@ -88,7 +88,7 @@ fun MaterialSettingsScreen(
                         SegmentedDropdownItem(
                             icon = AppIcons.Palette,
                             title = "主题模式",
-                            summary = "浅色、深色，或从壁纸取色",
+                            summary = "跟随系统、浅色或深色",
                             items = ColorMode.entries.map { it.label },
                             selectedIndex = ColorMode.entries.indexOf(AppState.colorMode).coerceAtLeast(0),
                             onItemSelected = { index ->

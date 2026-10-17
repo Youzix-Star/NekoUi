@@ -33,16 +33,15 @@ import top.youzix.neko.demo.AppEntry
 import top.youzix.neko.demo.ListDemo
 import top.youzix.neko.demo.ListFilter
 import top.youzix.neko.demo.TagTone
+import top.youzix.neko.ui.miuix.components.SearchField
 import top.youzix.neko.ui.miuix.components.StatusTag
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.PullToRefresh
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
-import top.yukonga.miuix.kmp.basic.SearchBar
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -61,69 +60,67 @@ fun ListScreen(
     val scope = rememberCoroutineScope()
     val entries = ListDemo.filter(query, filter)
 
-    PullToRefresh(
-        isRefreshing = isRefreshing,
-        onRefresh = {
-            if (!isRefreshing) {
-                isRefreshing = true
-                scope.launch {
-                    delay(700)
-                    isRefreshing = false
-                }
-            }
-        },
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .nestedScroll(scrollBehavior.nestedScrollConnection),
-        topAppBarScrollBehavior = scrollBehavior,
+            .padding(contentPadding),
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = contentPadding,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+        // Pinned above the list, like SukiSU's search bar in the top bar.
+        SearchField(
+            text = query,
+            onTextChange = { query = it },
+            label = "搜索应用",
+            modifier = Modifier.padding(horizontal = 4.dp),
+        )
+
+        PullToRefresh(
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                if (!isRefreshing) {
+                    isRefreshing = true
+                    scope.launch {
+                        delay(700)
+                        isRefreshing = false
+                    }
+                }
+            },
+            modifier = Modifier
+                .fillMaxSize()
+                .weight(1f)
+                .nestedScroll(scrollBehavior.nestedScrollConnection),
+            topAppBarScrollBehavior = scrollBehavior,
         ) {
-            item(key = "search") {
-                SearchBar(
-                    inputField = {
-                        TextField(
-                            value = query,
-                            onValueChange = { query = it },
-                            modifier = Modifier.fillMaxWidth(),
-                            label = "搜索",
-                            singleLine = true,
-                        )
-                    },
-                    onExpandedChange = {},
-                    expanded = false,
-                    content = {},
-                )
-            }
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(top = 12.dp, bottom = 12.dp),
+            ) {
+                item(key = "header") {
+                    ListHeader(
+                        granted = ListDemo.granted,
+                        total = ListDemo.total,
+                        filter = filter,
+                        onFilterChange = { filter = it },
+                    )
+                }
 
-            item(key = "header") {
-                ListHeader(
-                    granted = ListDemo.granted,
-                    total = ListDemo.total,
-                    filter = filter,
-                    onFilterChange = { filter = it },
-                )
-            }
-
-            item(key = "apps") {
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    entries.forEach { app ->
-                        BasicComponent(
-                            title = app.name,
-                            summary = app.packageName,
-                            onClick = { selected = app },
-                            endActions = {
-                                val (background, content) = tagColors(app.tone)
-                                StatusTag(
-                                    label = app.note,
-                                    backgroundColor = background,
-                                    contentColor = content,
-                                )
-                            },
-                        )
+                item(key = "apps") {
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        entries.forEach { app ->
+                            BasicComponent(
+                                title = app.name,
+                                summary = app.packageName,
+                                onClick = { selected = app },
+                                endActions = {
+                                    val (background, content) = tagColors(app.tone)
+                                    StatusTag(
+                                        label = app.note,
+                                        backgroundColor = background,
+                                        contentColor = content,
+                                    )
+                                },
+                            )
+                        }
                     }
                 }
             }

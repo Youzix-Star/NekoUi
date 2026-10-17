@@ -5,12 +5,8 @@
 
 package top.youzix.neko.ui.material3
 
-import android.os.Build
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 import top.youzix.neko.ui.theme.ColorMode
 import top.youzix.neko.ui.theme.defaultMaterialScheme
 
@@ -25,16 +21,6 @@ fun MaterialAppTheme(
     colorMode: ColorMode,
     content: @Composable () -> Unit,
 ) {
-    val context = LocalContext.current
-    val isDark = colorMode.isDark()
-    val canUseWallpaper = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-
-    val scheme = when {
-        !colorMode.isMonet -> defaultMaterialScheme(isDark)
-        canUseWallpaper ->
-            if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        else -> defaultMaterialScheme(isDark)
-    }
-
+    val scheme = defaultMaterialScheme(colorMode.isDark())
     MaterialTheme(colorScheme = scheme, content = content)
 }

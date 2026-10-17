@@ -110,7 +110,7 @@ fun MaterialHomeScreen(
                 .then(backdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier)
                 .verticalScroll(rememberScrollState())
                 .padding(paddingValues + outerPadding)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             HeroCard(home.hero)
