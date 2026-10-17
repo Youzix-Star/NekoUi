@@ -8,8 +8,8 @@
 | 路径 | 是什么 |
 |---|---|
 | `demo/` | 页面要的全部数据。`HomeDemo` / `ListDemo` / `LogDemo` / `DocsDemo`，换掉这些就是换掉应用内容 |
-| `ui/miuix/**` | Miuix 引擎：首页、列表、组件画廊、设置、关于、许可、液态玻璃底栏、预测性返回 |
-| `ui/material3/**` | Material 3 引擎：同一批页面，另一套实现；`components/` 是 SukiSU 的分段列表与状态标签 |
+| `ui/miuix/**` | Miuix 引擎：首页、列表、组件画廊、设置、关于、许可、液态玻璃底栏 |
+| `ui/material3/**` | Material 3 引擎：同一批页面，另一套实现；`components/` 是 SukiSU 的分段列表、搜索栏、状态标签 |
 | `ui/common/` 之外 | `AppState`（引擎/模糊/主题/返回动画）、`UiEnginePrefs`（持久化）、`MainActivity`（选引擎） |
 | `crash/` | 崩溃记录与独立进程 `:crash` 的崩溃页。**这是框架的一部分，不要删** |
 | `NekoApp` | 装崩溃处理器的地方；`:crash` 进程里不装（否则会叠第二层崩溃页） |
@@ -33,8 +33,9 @@
 2. `ui/miuix/<名字>/` 与 `ui/material3/<名字>/` 各写一个 Screen，签名对齐现有页面：
    miuix 是 `(contentPadding, scrollBehavior[, …])`，Material 是 `(outerPadding, useBlur[, …])`。
 3. 页签：改两个 `*App.kt` 的 `navigationItems`/`labels`、`TAB_*` 常量、`titles`，并确认底部导航放得下。
-4. 二级页：加进 `MiuixSubPage` / `MaterialSubPage` 枚举，在 `PredictiveBackHost` 的 `subPage` 分支里渲染；
-   Material 的二级页自带 `Scaffold` + 返回箭头，miuix 的由外层 `Scaffold` 提供标题栏。
+4. 二级页：在 `ui/nav/Routes.kt` 里加一个 `data object`，然后在两个 `*App.kt` 的 `NavDisplay { entry<Route.X> { … } }`
+   里注册；页面自己带 `Scaffold` + 返回箭头，`onBack` 调 `navigator.pop()`。返回手势与动画由 miuix-nav 提供，
+   **不要**再手写返回动画。
 5. `python3 scripts/klex.py <改过的文件>`（词法 / 括号 / 未使用 import），然后交给 CI。
 
 ## 工作方式
