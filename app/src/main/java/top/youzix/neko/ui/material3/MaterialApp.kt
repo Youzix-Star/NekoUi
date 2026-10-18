@@ -129,6 +129,11 @@ private fun MaterialShell(
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    // Only the bottom bar's height leaves this scaffold: each page owns its own
+                    // app bar and its own window insets, exactly like SukiSU's page scaffolds.
+                    // Letting this one add the status-bar inset too is what put an extra
+                    // status-bar-height gap under every page's title.
+                    contentWindowInsets = WindowInsets(0, 0, 0, 0),
                     bottomBar = {
                         // Driven by selectedPage, not the pager's currentPage, so the highlight
                         // lands the moment the tab is tapped.
