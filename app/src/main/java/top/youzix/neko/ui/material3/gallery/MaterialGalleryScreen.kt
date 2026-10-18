@@ -106,7 +106,7 @@ fun MaterialGalleryScreen(
                     Text("标题", style = MaterialTheme.typography.titleLarge)
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        "正文：界面只有两件事要交代清楚，现在是什么状态、接下来能做什么。",
+                        "正文：一屏说清现在怎样、接下来能做什么。",
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     Spacer(Modifier.height(6.dp))
@@ -231,7 +231,7 @@ fun MaterialGalleryScreen(
             }
 
             item(key = "code") {
-                Section(title = "代码块") {
+                Section(title = "代码") {
                     Text(
                         text = DocsDemo.CODE,
                         fontFamily = FontFamily.Monospace,
@@ -275,7 +275,7 @@ fun MaterialGalleryScreen(
             }
 
             item(key = "dialog") {
-                Section(title = "对话框与提示") {
+                Section(title = "对话框") {
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         Button(onClick = { showDialog = true }) { Text("打开对话框") }
                         Button(onClick = {}) { Text("显示提示") }
@@ -289,7 +289,7 @@ fun MaterialGalleryScreen(
         AlertDialog(
             onDismissRequest = { showDialog = false },
             title = { Text("对话框") },
-            text = { Text("打断是有代价的：能用一个二级页解决的问题，不要用对话框。") },
+            text = { Text("能开二级页就别用对话框。") },
             confirmButton = {
                 TextButton(onClick = { showDialog = false }) { Text("知道了") }
             },

@@ -108,7 +108,7 @@ private fun SettingsContent(
                 Card(modifier = Modifier.fillMaxWidth()) {
                     OverlayDropdownPreference(
                         title = "主题模式",
-                        summary = "跟随系统、浅色或深色（动态取色）",
+                        summary = "浅色 / 深色 / 跟随系统",
                         items = modeLabels,
                         selectedIndex = ColorMode.entries.indexOf(AppState.colorMode).coerceAtLeast(0),
                         startAction = { Icon(AppIcons.Palette, null, Modifier.size(22.dp), colorScheme.onBackground) },
@@ -120,8 +120,8 @@ private fun SettingsContent(
                         },
                     )
                     SwitchPreference(
-                        title = "模糊与液态玻璃",
-                        summary = "底栏与顶栏的半透明模糊",
+                        title = "模糊",
+                        summary = "底栏与顶栏的毛玻璃",
                         startAction = { Icon(AppIcons.BlurOn, null, Modifier.size(22.dp), colorScheme.onBackground) },
                         checked = AppState.useBlur,
                         onCheckedChange = {
@@ -139,7 +139,7 @@ private fun SettingsContent(
                 Card(modifier = Modifier.fillMaxWidth()) {
                     OverlayDropdownPreference(
                         title = "界面引擎",
-                        summary = "切换整套界面实现",
+                        summary = "换一套皮",
                         items = engineLabels,
                         selectedIndex = UiEngine.entries.indexOf(engine).coerceAtLeast(0),
                         startAction = { Icon(AppIcons.Gallery, null, Modifier.size(22.dp), colorScheme.onBackground) },
@@ -157,13 +157,13 @@ private fun SettingsContent(
                 Card(modifier = Modifier.fillMaxWidth()) {
                     ArrowPreference(
                         title = "关于 NekoUi",
-                        summary = "版本、源码与设备信息",
+                        summary = "版本、源码与设备",
                         startAction = { Icon(AppIcons.About, null, Modifier.size(22.dp), colorScheme.onBackground) },
                         onClick = onOpenAbout,
                     )
                     ArrowPreference(
                         title = "开源许可",
-                        summary = "依赖的许可证",
+                        summary = "依赖的许可",
                         startAction = { Icon(AppIcons.License, null, Modifier.size(22.dp), colorScheme.onBackground) },
                         onClick = onOpenLicenses,
                     )

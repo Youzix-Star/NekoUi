@@ -136,7 +136,7 @@ fun MaterialAboutScreen(
                         SegmentedListItem(
                             onClick = { uriHandler.openUri(REPOSITORY_URL) },
                             headlineContent = { Text("获取源代码") },
-                            supportingContent = { Text("GitHub 上的源码") },
+                            supportingContent = { Text("GitHub 上的 NekoUi") },
                             leadingContent = { IconTile(AppIcons.SourceCode, "获取源代码") },
                             trailingContent = { Icon(AppIcons.ChevronRight, null) },
                         )
@@ -145,7 +145,7 @@ fun MaterialAboutScreen(
                         SegmentedListItem(
                             onClick = onOpenLicenses,
                             headlineContent = { Text("开源许可") },
-                            supportingContent = { Text("依赖的许可证") },
+                            supportingContent = { Text("依赖的许可") },
                             leadingContent = { IconTile(AppIcons.License, "开源许可") },
                             trailingContent = { Icon(AppIcons.ChevronRight, null) },
                         )
@@ -160,7 +160,7 @@ fun MaterialAboutScreen(
                             supportingContent = {
                                 Text(
                                     if (crashLog.isNullOrBlank()) "没有记录"
-                                    else "有一条记录，点按查看",
+                                    else "有一条，点开看看",
                                 )
                             },
                             leadingContent = { IconTile(AppIcons.Debug, "崩溃日志") },
@@ -171,7 +171,7 @@ fun MaterialAboutScreen(
                         SegmentedListItem(
                             onClick = { deviceInfo = DeviceInfo.snapshot(context) },
                             headlineContent = { Text("设备信息") },
-                            supportingContent = { Text("机型、系统与显示") },
+                            supportingContent = { Text("机型、系统与屏幕") },
                             leadingContent = { IconTile(AppIcons.Phones, "设备信息") },
                             trailingContent = { Icon(AppIcons.ChevronRight, null) },
                         )
@@ -185,7 +185,7 @@ fun MaterialAboutScreen(
                                         checking = false
                                         when (result) {
                                             is UpdateResult.Available -> update = result
-                                            UpdateResult.UpToDate -> onNotify("已是最新版本")
+                                            UpdateResult.UpToDate -> onNotify("已经最新啦 ٩(ˊᗜˋ*)و")
                                             is UpdateResult.Failed -> onNotify("检查失败：" + result.message)
                                         }
                                     }
@@ -193,7 +193,7 @@ fun MaterialAboutScreen(
                             },
                             headlineContent = { Text("检查更新") },
                             supportingContent = {
-                                Text(if (checking) "检查中…" else "当前 v${BuildConfig.VERSION_NAME}")
+                                Text(if (checking) "看看…" else "当前 v${BuildConfig.VERSION_NAME}")
                             },
                             leadingContent = { IconTile(AppIcons.Refresh, "检查更新") },
                             trailingContent = { Icon(AppIcons.ChevronRight, null) },
@@ -216,7 +216,7 @@ fun MaterialAboutScreen(
                                     throw IllegalStateException("模拟崩溃：这是调试里手动触发的")
                                 },
                                 headlineContent = { Text("模拟崩溃") },
-                                supportingContent = { Text("让应用崩一次，看看崩溃报告页长什么样") },
+                                supportingContent = { Text("崩一次，看看报告页") },
                                 leadingContent = { IconTile(AppIcons.Debug, "模拟崩溃") },
                             )
                         }
@@ -226,7 +226,7 @@ fun MaterialAboutScreen(
 
             item {
                 Text(
-                    text = "AGPL-3.0 · 界面参考 SukiSU-Ultra 与 NekoPlus",
+                    text = "AGPL-3.0 · 一个壳子 (･ω<)☆",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 28.dp, vertical = 12.dp),

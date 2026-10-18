@@ -58,6 +58,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalUriHandler
+import top.youzix.neko.AppState
+import top.youzix.neko.BuildConfig
 import top.youzix.neko.demo.HomeActions
 import top.youzix.neko.demo.HomeTarget
 import top.youzix.neko.demo.HomeUiState
@@ -246,7 +248,7 @@ private fun ActiveStatusCard(
                         fontWeight = FontWeight.Black,
                     )
                     Text(
-                        text = stringResource(R.string.home_working_version, "${state.ksuVersion}-${state.kernelUAPIVersion}"),
+                        text = "v${BuildConfig.VERSION_NAME} · ${AppState.engine.label}",
                         style = MaterialTheme.typography.bodyMedium,
                         fontFamily = FontFamily.Monospace,
                     )
@@ -672,7 +674,7 @@ private object R {
 
 private val HOME_STRINGS: Map<Int, String> = mapOf(
     1 to "NekoUi",
-    2 to "运行中",
+    2 to "运行中 ヽ(•‿•)ノ",
     3 to "版本 %1\$s",
     4 to "安全模式",
     5 to "越狱模式",
@@ -684,19 +686,19 @@ private val HOME_STRINGS: Map<Int, String> = mapOf(
     11 to "当前内核不支持，需要 GKI 内核",
     12 to "需要更新管理器",
     13 to "获取 Root 失败",
-    14 to "安装",
-    15 to "点击安装",
-    16 to "未安装",
-    17 to "不受支持",
-    18 to "当前设备不受支持",
+    14 to "装上",
+    15 to "点一下装上",
+    16 to "还没装",
+    17 to "不支持",
+    18 to "这台设备跑不了",
     19 to "越狱",
-    20 to "管理器版本",
-    21 to "内核版本",
+    20 to "版本",
+    21 to "系统",
     22 to "完整内核版本",
-    23 to "设备型号",
+    23 to "机型",
     24 to "系统指纹",
-    25 to "SELinux 状态",
-    26 to "Seccomp 状态",
+    25 to "SELinux",
+    26 to "Seccomp",
     27 to "Zygisk 实现",
     28 to "SUSFS 版本",
     29 to "Hook 方式",
@@ -712,10 +714,10 @@ private val HOME_STRINGS: Map<Int, String> = mapOf(
     39 to "严格",
     40 to "过滤",
     41 to "未知",
-    42 to "查看源代码",
+    42 to "看源码",
     43 to "GitHub 上的 NekoUi",
     44 to "开源许可",
-    45 to "依赖的许可证",
+    45 to "依赖的许可",
     46 to "neko://licenses",
     47 to "更新说明",
     48 to "更新",

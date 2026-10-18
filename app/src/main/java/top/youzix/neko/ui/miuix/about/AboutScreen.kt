@@ -135,7 +135,7 @@ private fun AboutContent(
                 Card(modifier = Modifier.fillMaxWidth()) {
                     ArrowPreference(
                         title = "获取源代码",
-                        summary = "GitHub 上的源码",
+                        summary = "GitHub 上的 NekoUi",
                         startAction = {
                             Icon(AppIcons.SourceCode, null, Modifier.size(22.dp))
                         },
@@ -143,7 +143,7 @@ private fun AboutContent(
                     )
                     ArrowPreference(
                         title = "开源许可",
-                        summary = "依赖的许可证",
+                        summary = "依赖的许可",
                         startAction = {
                             Icon(AppIcons.License, null, Modifier.size(22.dp))
                         },
@@ -151,7 +151,7 @@ private fun AboutContent(
                     )
                     ArrowPreference(
                         title = "崩溃日志",
-                        summary = if (crashLog.isNullOrBlank()) "没有记录" else "有一条记录，点按查看",
+                        summary = if (crashLog.isNullOrBlank()) "没有记录" else "有一条，点开看看",
                         startAction = {
                             Icon(AppIcons.Debug, null, Modifier.size(22.dp))
                         },
@@ -162,7 +162,7 @@ private fun AboutContent(
                     )
                     ArrowPreference(
                         title = "设备信息",
-                        summary = "机型、系统与显示",
+                        summary = "机型、系统与屏幕",
                         startAction = {
                             Icon(AppIcons.Phones, null, Modifier.size(22.dp))
                         },
@@ -170,7 +170,7 @@ private fun AboutContent(
                     )
                     ArrowPreference(
                         title = "检查更新",
-                        summary = if (checking) "检查中…" else "当前 v${BuildConfig.VERSION_NAME}",
+                        summary = if (checking) "看看…" else "当前 v${BuildConfig.VERSION_NAME}",
                         startAction = {
                             Icon(AppIcons.Refresh, null, Modifier.size(22.dp))
                         },
@@ -181,7 +181,7 @@ private fun AboutContent(
                                 checking = false
                                 when (result) {
                                     is UpdateResult.Available -> update = result
-                                    UpdateResult.UpToDate -> onNotify("已是最新版本")
+                                    UpdateResult.UpToDate -> onNotify("已经最新啦 ٩(ˊᗜˋ*)و")
                                     is UpdateResult.Failed -> onNotify("检查失败：" + result.message)
                                 }
                             }
@@ -201,7 +201,7 @@ private fun AboutContent(
                         // (and the report screen) see it exactly like a real one.
                         ArrowPreference(
                             title = "模拟崩溃",
-                            summary = "让应用崩一次，看看崩溃报告页长什么样",
+                            summary = "崩一次，看看报告页",
                             startAction = {
                                 Icon(AppIcons.Debug, null, Modifier.size(22.dp))
                             },
@@ -214,7 +214,7 @@ private fun AboutContent(
 
         item(key = "footer") {
             Text(
-                text = "AGPL-3.0 · 界面参考 SukiSU-Ultra 与 NekoPlus",
+                text = "AGPL-3.0 · 一个壳子 (･ω<)☆",
                 style = MiuixTheme.textStyles.footnote2,
                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),

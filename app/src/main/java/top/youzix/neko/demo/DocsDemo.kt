@@ -20,14 +20,14 @@ object DocsDemo {
     )
 
     val bulletPoints: List<String> = listOf(
-        "一屏一个主操作；次要操作收进行尾或长按。",
-        "状态用颜色和标签表达，不要用整段文字解释。",
-        "空态要说出下一步，而不是只说「没有数据」。",
+        "一屏一个主操作。",
+        "状态用颜色和标签说。",
+        "空态要说下一步。",
     )
 
-    const val QUOTE = "能用一个二级页解决的，不要用对话框。"
+    const val QUOTE = "能开二级页就别用对话框。"
 
     const val CODE = "val home = demoHome()\nHomeScreen(contentPadding, scrollBehavior)"
 
-    val codeNote = "示例代码块：等宽字体 + 主题色背景，不长于屏幕一半。"
+    val codeNote = "等宽 + 主题色，别超过半屏。"
 }

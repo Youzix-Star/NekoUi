@@ -57,11 +57,6 @@ fun MaterialLicensesScreen(onBack: () -> Unit, useBlur: Boolean) {
                 "AGPL-3.0",
                 "https://github.com/Youzix-Star/NekoPlus",
             ),
-            LicenseEntry(
-                "SukiSU-Ultra（界面参考，GPL-3.0）",
-                "GPL-3.0",
-                "https://github.com/SukiSU-Ultra/SukiSU-Ultra",
-            ),
             LicenseEntry("miuix", "Apache License 2.0", "https://github.com/compose-miuix-ui/miuix"),
             LicenseEntry(
                 "AndroidX / Jetpack Compose",
@@ -142,7 +137,7 @@ fun MaterialLicensesScreen(onBack: () -> Unit, useBlur: Boolean) {
 
         item {
             Text(
-                text = "点按可在浏览器中查看原文。",
+                text = "点一下看原文 ٩(ˊᗜˋ*)و",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp),

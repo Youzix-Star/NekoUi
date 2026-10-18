@@ -113,7 +113,7 @@ private fun GalleryContent(
             Section(title = "文本") {
                 Text("标题", style = MiuixTheme.textStyles.title3)
                 Spacer(Modifier.height(6.dp))
-                Text("正文：界面只有两件事要交代清楚，现在是什么状态、接下来能做什么。", style = MiuixTheme.textStyles.body2)
+                Text("正文：一屏说清现在怎样、接下来能做什么。", style = MiuixTheme.textStyles.body2)
                 Spacer(Modifier.height(6.dp))
                 Text("脚注：其余都是装饰。", style = MiuixTheme.textStyles.footnote1)
             }
@@ -160,7 +160,7 @@ private fun GalleryContent(
         }
 
         item(key = "controls") {
-            Section(title = "开关与滑杆") {
+            Section(title = "开关 / 滑杆") {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -181,10 +181,10 @@ private fun GalleryContent(
 
         item(key = "warning") {
             Column {
-                SmallTitle(text = "提示卡")
-                WarningCard(message = "这是一条提醒：设置已保存。", level = WarningLevel.Notice)
+                SmallTitle(text = "提示")
+                WarningCard(message = "已保存 ٩(ˊᗜˋ*)و", level = WarningLevel.Notice)
                 Spacer(Modifier.height(8.dp))
-                WarningCard(message = "这是一条错误：请求失败，可重试。", level = WarningLevel.Error)
+                WarningCard(message = "失败了，可以重试", level = WarningLevel.Error)
             }
         }
 
@@ -213,7 +213,7 @@ private fun GalleryContent(
         }
 
         item(key = "code") {
-            Section(title = "代码块") {
+            Section(title = "代码") {
                 Text(
                     text = DocsDemo.CODE,
                     fontFamily = FontFamily.Monospace,
@@ -257,7 +257,7 @@ private fun GalleryContent(
         }
 
         item(key = "dialog") {
-            Section(title = "对话框与提示") {
+            Section(title = "对话框") {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Button(onClick = { showDialog = true }) {
                         Text("打开对话框", style = MiuixTheme.textStyles.button)
@@ -274,7 +274,7 @@ private fun GalleryContent(
         OverlayDialog(
             show = true,
             title = "对话框",
-            summary = "打断是有代价的：能用一个二级页解决的问题，不要用对话框。",
+            summary = "能开二级页就别用对话框。",
             onDismissRequest = { showDialog = false },
         ) {
             Button(onClick = { showDialog = false }, modifier = Modifier.fillMaxWidth()) {

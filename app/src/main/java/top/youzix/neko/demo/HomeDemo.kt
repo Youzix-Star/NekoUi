@@ -72,7 +72,7 @@ fun demoHome(): Home = Home(
         tags = listOf(
             Tag("双引擎", Tone.ACCENT),
             Tag("已签名", Tone.OK),
-            Tag("演示数据", Tone.IDLE),
+            Tag("演示", Tone.IDLE),
         ),
     ),
     stats = listOf(
@@ -84,13 +84,13 @@ fun demoHome(): Home = Home(
         HomeLink(
             target = HomeTarget.Gallery,
             title = "组件画廊",
-            summary = "所有控件一页看全",
+            summary = "控件都在这儿",
             icon = AppIcons.Gallery,
         ),
         HomeLink(
             target = HomeTarget.Licenses,
             title = "开源许可",
-            summary = "AGPL-3.0 · SukiSU-Ultra · NekoPlus",
+            summary = "AGPL-3.0",
             icon = AppIcons.License,
         ),
     ),

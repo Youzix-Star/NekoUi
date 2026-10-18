@@ -86,7 +86,7 @@ fun MaterialSettingsScreen(
                     SegmentedDropdownItem(
                         icon = AppIcons.Palette,
                         title = "主题模式",
-                        summary = "跟随系统、浅色或深色（动态取色）",
+                        summary = "浅色 / 深色 / 跟随系统",
                         items = ColorMode.entries.map { it.label },
                         selectedIndex = ColorMode.entries.indexOf(AppState.colorMode).coerceAtLeast(0),
                         onItemSelected = { index ->
@@ -100,8 +100,8 @@ fun MaterialSettingsScreen(
                 item {
                     SegmentedSwitchItem(
                         icon = AppIcons.BlurOn,
-                        title = "模糊与液态玻璃",
-                        summary = "底栏与顶栏的半透明模糊",
+                        title = "模糊",
+                        summary = "底栏与顶栏的毛玻璃",
                         checked = AppState.useBlur,
                         onCheckedChange = {
                             AppState.useBlur = it
@@ -119,7 +119,7 @@ fun MaterialSettingsScreen(
                     SegmentedDropdownItem(
                         icon = AppIcons.Gallery,
                         title = "界面引擎",
-                        summary = "切换整套界面实现",
+                        summary = "换一套皮",
                         items = UiEngine.entries.map { it.label },
                         selectedIndex = UiEngine.entries.indexOf(engine).coerceAtLeast(0),
                         onItemSelected = { index ->
@@ -137,7 +137,7 @@ fun MaterialSettingsScreen(
                     SegmentedListItem(
                         onClick = onOpenAbout,
                         headlineContent = { Text("关于 NekoUi") },
-                        supportingContent = { Text("版本、源码与设备信息") },
+                        supportingContent = { Text("版本、源码与设备") },
                         leadingContent = { IconTile(AppIcons.About, "关于 NekoUi") },
                         trailingContent = { Icon(AppIcons.ChevronRight, null) },
                     )
@@ -146,7 +146,7 @@ fun MaterialSettingsScreen(
                     SegmentedListItem(
                         onClick = onOpenLicenses,
                         headlineContent = { Text("开源许可") },
-                        supportingContent = { Text("依赖的许可证") },
+                        supportingContent = { Text("依赖的许可") },
                         leadingContent = { IconTile(AppIcons.License, "开源许可") },
                         trailingContent = { Icon(AppIcons.ChevronRight, null) },
                     )

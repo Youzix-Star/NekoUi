@@ -74,11 +74,6 @@ private fun LicensesContent(contentPadding: PaddingValues) {
                 "AGPL-3.0",
                 "https://github.com/Youzix-Star/NekoPlus",
             ),
-            LicenseEntry(
-                "SukiSU-Ultra（界面参考，GPL-3.0）",
-                "GPL-3.0",
-                "https://github.com/SukiSU-Ultra/SukiSU-Ultra",
-            ),
             LicenseEntry("miuix", "Apache License 2.0", "https://github.com/compose-miuix-ui/miuix"),
             LicenseEntry(
                 "AndroidX / Jetpack Compose",
@@ -134,7 +129,7 @@ private fun LicensesContent(contentPadding: PaddingValues) {
 
         item(key = "footer") {
             Text(
-                text = "点按可在浏览器中查看原文。",
+                text = "点一下看原文 ٩(ˊᗜˋ*)و",
                 style = MiuixTheme.textStyles.footnote2,
                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 modifier = Modifier
