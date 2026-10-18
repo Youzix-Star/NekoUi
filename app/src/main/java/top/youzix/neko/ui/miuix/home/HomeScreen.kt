@@ -68,18 +68,16 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme.isDynamicColor
 import top.yukonga.miuix.kmp.utils.PressFeedbackType
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
-import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.unit.Dp
 import top.youzix.neko.demo.HomeActions
 import top.youzix.neko.demo.HomeTarget
 import top.youzix.neko.demo.HomeUiState
+import top.youzix.neko.demo.SystemInfo
 import top.youzix.neko.demo.demoHomeState
 import top.youzix.neko.ui.miuix.components.BlurredBar
 import top.youzix.neko.ui.miuix.components.StatusTag
 import top.youzix.neko.ui.miuix.components.WarningCard
 import top.youzix.neko.ui.miuix.components.WarningLevel
 import top.youzix.neko.ui.miuix.isInDarkTheme
-import top.yukonga.miuix.kmp.blur.LayerBackdrop
 
 @Composable
 fun HomePagerMiuix(
@@ -508,13 +506,7 @@ private fun InfoCard(
                             content = systemInfo.kernelFullVersion,
                         )
                     }
-                    if (isSusfsSupported) {
-                        InfoText(
-                            icon = Icons.Filled.Build,
-                            title = stringResource(R.string.home_susfs_version),
-                            content = susfsInfo.detail,
-                        )
-                    } else if (!hookTypeLabel.isNullOrBlank()) {
+                    if (!hookTypeLabel.isNullOrBlank()) {
                         InfoText(
                             icon = Icons.Filled.Build,
                             title = stringResource(R.string.hook_type),
