@@ -208,9 +208,13 @@ fun SegmentedColumn(
                             dpSpring, label = "SegmentedGap"
                         )
 
+                        // `dpSpring` overshoots: when the group shrinks (a filter removed rows) an
+                        // item can be interpolated below zero, and both a negative radius and a
+                        // negative padding are hard errors in Compose. Clamp at the use site.
                         val shape = RoundedCornerShape(
-                            topStart = topRadius, topEnd = topRadius,
-                            bottomStart = bottomRadius, bottomEnd = bottomRadius
+                            topStart = topRadius.coerceAtLeast(0.dp), topEnd = topRadius.coerceAtLeast(0.dp),
+                            bottomStart = bottomRadius.coerceAtLeast(0.dp),
+                            bottomEnd = bottomRadius.coerceAtLeast(0.dp),
                         )
 
                         Box(
@@ -232,7 +236,7 @@ fun SegmentedColumn(
                             CompositionLocalProvider(
                                 LocalListItemShapes provides ListItemDefaults.segmentedShapes(0, 1).copy(shape = shape)
                             ) {
-                                Column(modifier = Modifier.padding(top = gap)) {
+                                Column(modifier = Modifier.padding(top = gap.coerceAtLeast(0.dp))) {
                                     entry.content()
                                 }
                             }
